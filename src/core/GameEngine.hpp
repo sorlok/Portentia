@@ -4,6 +4,7 @@
 #include <string>
 
 #include "widgets/FpsCounter.hpp"
+#include "slices/Slice.hpp"
 
 /**
  * Simple GameEngine class that exposes blocks of SFML functionality.
@@ -14,6 +15,9 @@ public:
 
 	///How to position the window.
 	enum class Position {Default, Center};
+
+	//Set the current Slice
+	void setSlice(Slice* slice);
 
 	///Create and show the window
 	void createGameWindow(const sf::VideoMode& wndSize, const std::string& title, Position wndPos=Position::Default);
@@ -27,5 +31,6 @@ private:
 	sf::RenderWindow window;
 	sf::Font monoFont;
 	FpsCounter fps;
+	Slice* currSlice;
 };
 
