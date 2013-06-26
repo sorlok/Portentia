@@ -1,10 +1,26 @@
 #include "EuclideanMenuSlice.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
-EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr)
+#include "core/GameEngine.hpp"
+#include "slices/ConsoleSlice.hpp"
+
+namespace {
+//Helper: No modifiers
+bool NoModifiers(const sf::Event::KeyEvent& key) {
+	return !(key.alt || key.control || key.shift || key.system);
+}
+} //End anon namespace
+
+
+EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr)
 {
-
+	//TEMP
+	sf::CircleShape* circ = new sf::CircleShape(100, 10.0);
+	circ->setFillColor(sf::Color::Blue);
+	circ->setPosition(100, 100);
+	items.push_back(circ);
 }
 
 void EuclideanMenuSlice::load(const std::string& file)
@@ -16,10 +32,11 @@ void EuclideanMenuSlice::save(const std::string& file)
 {
 }
 
-void EuclideanMenuSlice::activated(sf::RenderWindow& window)
+void EuclideanMenuSlice::activated(GameEngineControl& geControl, sf::RenderWindow& window)
 {
 	//Save
 	this->window = &window;
+	this->geControl = &geControl;
 
 	//Size the view appropriately.
 	resizeViews();
@@ -41,11 +58,29 @@ void EuclideanMenuSlice::resizeViews()
 	minimapView.setViewport(sf::FloatRect(0.79, 0.01, 0.2, 0.2));
 }
 
-void EuclideanMenuSlice::processEvents(const std::list<sf::Event>& events, const sf::Time& elapsed)
+void EuclideanMenuSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
-	for (const sf::Event& ev : events) {
-		//Switch based on event type.
+	switch (event.type) {
+		case sf::Event::KeyPressed:
+			processKeyPress(event.key);
+			break;
 	}
+}
+
+void EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
+{
+	//Failsafe
+	if (!geControl) { throw std::runtime_error("Can't process events without a GameEngineControl"); }
+
+	switch (key.code) {
+		case sf::Keyboard::Return:
+			if (NoModifiers(key)) {
+				//TODO: Open a "Console"
+				geControl->YieldToSlice(new ConsoleSlice("Add menu items with \"additem\".", {"abc","def","ghi"}), true);
+			}
+			break;
+	}
+
 }
 
 void EuclideanMenuSlice::render()
@@ -53,15 +88,11 @@ void EuclideanMenuSlice::render()
 	//Nothing to draw.
 	if (!window) { return; }
 
-	//Temp
-	sf::CircleShape circ(100, 10.0);
-	circ.setFillColor(sf::Color::Blue);
-	circ.setPosition(100, 100);
-
-
 	//First, draw everything to the main view.
 	window->setView(mainView);
-	window->draw(circ);
+	for (sf::Drawable* item : items) {
+		window->draw(*item);
+	}
 
 	//Draw a background for the minimap.
 	window->setView(window->getDefaultView());
@@ -73,8 +104,9 @@ void EuclideanMenuSlice::render()
 
 	//Now, draw the minimap
 	window->setView(minimapView);
-	circ.setFillColor(sf::Color(0x00, 0x00, 0xFF, 0x70)); //Semi-transparent.
-	window->draw(circ);
+	for (sf::Drawable* item : items) {
+		window->draw(*item);
+	}
 
 
 }

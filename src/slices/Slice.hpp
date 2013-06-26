@@ -3,6 +3,9 @@
 #include <list>
 #include <SFML/Graphics.hpp>
 
+//Forward-declarations
+class GameEngineControl;
+
 
 /**
  * A "slice" is an element of gameplay. It receives all input events for a given time tick, and
@@ -19,10 +22,10 @@ public:
 	/// is re-activated by canceling out of a sub-view). Views are guaranteed to have this
 	/// function called before any events are sent its way, so it can be used to initialize resources.
 	///The RenderWindow passed in here is guaranteed to be valid until another call to activated (so save it!).
-	virtual void activated(sf::RenderWindow& window) = 0;
+	virtual void activated(GameEngineControl& geControl, sf::RenderWindow& window) = 0;
 
-	///Process all pending events. Debug events may be pulled first.
-	virtual void processEvents(const std::list<sf::Event>& events, const sf::Time& elapsed) = 0;
+	///Process a pending event.
+	virtual void processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
 
 	///Render.
 	///NOTE: Do NOT call window.display()
