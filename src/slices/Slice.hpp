@@ -6,6 +6,14 @@
 //Forward-declarations
 class GameEngineControl;
 
+//TODO: Something better.
+namespace {
+//Helper: No modifiers
+bool NoModifiers(const sf::Event::KeyEvent& key) {
+	return !(key.alt || key.control || key.shift || key.system);
+}
+} //End anon namespace
+
 
 /**
  * A "slice" is an element of gameplay. It receives all input events for a given time tick, and

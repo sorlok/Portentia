@@ -6,13 +6,6 @@
 #include "core/GameEngine.hpp"
 #include "slices/ConsoleSlice.hpp"
 
-namespace {
-//Helper: No modifiers
-bool NoModifiers(const sf::Event::KeyEvent& key) {
-	return !(key.alt || key.control || key.shift || key.system);
-}
-} //End anon namespace
-
 
 EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr)
 {

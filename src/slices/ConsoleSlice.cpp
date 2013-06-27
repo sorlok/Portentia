@@ -1,5 +1,6 @@
 #include "ConsoleSlice.hpp"
 
+#include <locale>
 #include <iostream>
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
@@ -86,11 +87,25 @@ void ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
 	switch (event.type) {
 		case sf::Event::KeyPressed:
-			//TODO: Handle Tab, Enter
+			if (event.key.code==sf::Keyboard::Return) {
+				if (NoModifiers(event.key)) {
+					std::cout <<"Return\n";
+				}
+			} else if (event.key.code==sf::Keyboard::Tab) {
+				if (NoModifiers(event.key)) {
+					std::cout <<"Tab\n";
+				}
+			} else if (event.key.code==sf::Keyboard::Escape) {
+				if (NoModifiers(event.key)) {
+					std::cout <<"Escape\n";
+				}
+			}
 			refreshText();
 			break;
 		case sf::Event::TextEntered:
-			currLine <<"[" <<event.text.unicode <<"]";
+			if (std::isprint(event.text.unicode)) {
+				currLine <<std::string(1, event.text.unicode);
+			}
 			refreshText();
 			break;
 	}
