@@ -30,6 +30,10 @@ private:
 	void resizeConsole();
 	void refreshText();
 
+	void matchCommands();
+	void appendCurrCommand(bool clearCmd=true);
+	void processCurrCommand();
+
 	std::string headerText;
 	std::list<std::string> commands;
 

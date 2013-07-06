@@ -69,7 +69,7 @@ void EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
 		case sf::Keyboard::Return:
 			if (NoModifiers(key)) {
 				//TODO: Open a "Console"
-				geControl->YieldToSlice(new ConsoleSlice("Add menu items with \"additem\".", {"abc","def","ghi"}), true);
+				geControl->YieldToSlice(new ConsoleSlice("Add menu items with \"additem\".", {"abc", "aaa", "def","ghi"}), true);
 			}
 			break;
 	}

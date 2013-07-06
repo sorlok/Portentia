@@ -9,7 +9,7 @@
 #include "slices/EuclideanMenuSlice.hpp"
 
 
-GameEngine::GameEngine() : fps(100)
+GameEngine::GameEngine() : fps(100), oldSlice(nullptr)
 {
 	//Load a default "mono" font, for helpful debugging.
 	bool foundFont = false;
@@ -41,10 +41,9 @@ void GameEngine::setSlice(Slice* slice) {
 
 
 void GameEngine::remSlice() {
-	//Remove the old one.
-	Slice* old = slices.back();
+	//Remove the old one (we can't delete it yet; it's this pointer is still valid).
+	oldSlice = slices.back();
 	slices.pop_back();
-	delete old;
 }
 
 
@@ -109,6 +108,12 @@ void GameEngine::runGameLoop()
                 	slices.back()->processEvent(event, elapsed);
                 }
             }
+        }
+
+        //Any slices pending deletion?
+        if (oldSlice) {
+        	delete oldSlice;
+        	oldSlice = nullptr;
         }
 
         //Now ask the slice to draw.

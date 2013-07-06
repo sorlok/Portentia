@@ -83,21 +83,106 @@ void ConsoleSlice::activated(GameEngineControl& geControl, sf::RenderWindow& win
 }
 
 
+void ConsoleSlice::appendCurrCommand(bool clearCmd)
+{
+	std::stringstream newLine;
+	newLine <<"$ " <<currLine.str();
+	out_buffer.push_back(newLine.str());
+	if (clearCmd) {
+		currLine.str("");
+	}
+}
+
+
+void ConsoleSlice::matchCommands()
+{
+	//Match any commands that start with currLine.
+	std::string pre = currLine.str();
+	std::list<std::string> found;
+	for (const std::string& line : commands) {
+		if (line.find(pre)==0) {
+			found.push_back(line);
+		}
+	}
+
+	//If there's only one command, we auto-complete. Else, we list the commands.
+	if (found.size()==1) {
+		currLine.str("");
+		currLine <<found.front();
+	} else if (!found.empty()) {
+		//Put "$ command"
+		appendCurrCommand(false);
+		std::stringstream newLine;
+
+		//Put the options.
+		for (const auto& item : found) {
+			newLine <<"   " <<item;
+		}
+		out_buffer.push_back(newLine.str());
+		refreshText();
+	}
+}
+
+
+void ConsoleSlice::processCurrCommand()
+{
+	//Match built-in commands first. A command "counts" if the first word (before a space) matches.
+	std::string word = currLine.str();
+	word = word.substr(0, word.find(' '));
+
+	//Avoid the insanity.
+	if (word.empty()) {
+		appendCurrCommand();
+		return;
+	}
+
+	//Else, match it.
+	for (const auto& cmd : commands) {
+		if (cmd == word) {
+			//TODO: Communicate this command back to the parent slice.
+			geControl->YieldToSlice(nullptr, false);
+			return;
+		}
+	}
+
+	//We also have some console-level commands. For now, we allow user-level commands to take precedence.
+	if (word=="exit") {
+		geControl->YieldToSlice(nullptr, false);
+	}
+
+	//If not, inform the user that their command is invalid.
+	appendCurrCommand(false);
+	out_buffer.push_back("Unknown command!");
+
+
+}
+
+
 void ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
 	switch (event.type) {
 		case sf::Event::KeyPressed:
 			if (event.key.code==sf::Keyboard::Return) {
 				if (NoModifiers(event.key)) {
-					std::cout <<"Return\n";
+					processCurrCommand();
 				}
 			} else if (event.key.code==sf::Keyboard::Tab) {
 				if (NoModifiers(event.key)) {
-					std::cout <<"Tab\n";
+					matchCommands();
 				}
 			} else if (event.key.code==sf::Keyboard::Escape) {
 				if (NoModifiers(event.key)) {
-					std::cout <<"Escape\n";
+					geControl->YieldToSlice(nullptr, false);
+					//break;
+				}
+			} else if (event.key.code==sf::Keyboard::BackSpace) {
+				if (NoModifiers(event.key)) {
+					if (!currLine.str().empty()) {
+						std::string prev = currLine.str();
+						prev = prev.substr(0, prev.length()-1);
+						currLine.str("");
+						currLine <<prev;
+					}
 				}
 			}
 			refreshText();

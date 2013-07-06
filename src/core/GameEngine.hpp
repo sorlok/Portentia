@@ -56,6 +56,8 @@ private:
 	sf::Font monoFont;
 	FpsCounter fps;
 
+	Slice* oldSlice;
+
 	std::list<Slice*> slices; //The back-most one handles events, but all of them render.
 };
 
