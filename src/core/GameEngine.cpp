@@ -107,13 +107,20 @@ void GameEngine::runGameLoop()
                 if (!slices.empty()) {
                 	slices.back()->processEvent(event, elapsed);
                 }
-            }
-        }
 
-        //Any slices pending deletion?
-        if (oldSlice) {
-        	delete oldSlice;
-        	oldSlice = nullptr;
+                //The slice may have Yielded
+                if (oldSlice) {
+                	//TODO: We need to ask the parent slice "should we save this slice?". Basically,
+                	//      if anything calls the Console (and it returns a credible-but-wrong command)
+                	//      then we want to immediately restore the Console with an error message from the
+                	//      parent slice.
+                	//TODO: This might be better done using the "Yield()" style syntax shown earlier.
+
+                	//Finally delete it.
+                	delete oldSlice;
+                	oldSlice = nullptr;
+                }
+            }
         }
 
         //Now ask the slice to draw.
