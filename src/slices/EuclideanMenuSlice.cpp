@@ -6,6 +6,8 @@
 #include "core/GameEngine.hpp"
 #include "slices/ConsoleSlice.hpp"
 
+using YieldAction = Slice::YieldAction;
+
 
 EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr)
 {
@@ -25,7 +27,7 @@ void EuclideanMenuSlice::save(const std::string& file)
 {
 }
 
-void EuclideanMenuSlice::activated(GameEngineControl& geControl, sf::RenderWindow& window)
+void EuclideanMenuSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
 {
 	//Save
 	this->window = &window;
@@ -51,16 +53,19 @@ void EuclideanMenuSlice::resizeViews()
 	minimapView.setViewport(sf::FloatRect(0.79, 0.01, 0.2, 0.2));
 }
 
-void EuclideanMenuSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
+YieldAction EuclideanMenuSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
+	YieldAction res;
 	switch (event.type) {
 		case sf::Event::KeyPressed:
-			processKeyPress(event.key);
+			res = processKeyPress(event.key);
 			break;
 	}
+
+	return res;
 }
 
-void EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
+YieldAction EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
 {
 	//Failsafe
 	if (!geControl) { throw std::runtime_error("Can't process events without a GameEngineControl"); }
@@ -69,11 +74,12 @@ void EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
 		case sf::Keyboard::Return:
 			if (NoModifiers(key)) {
 				//TODO: Open a "Console"
-				geControl->YieldToSlice(new ConsoleSlice("Add menu items with \"additem\".", {"abc", "aaa", "def","ghi"}), true);
+				return YieldAction(YieldAction::Stack, new ConsoleSlice("Add menu items with \"additem\".", {"abc", "aaa", "def","ghi"}));
 			}
 			break;
 	}
 
+	return YieldAction();
 }
 
 void EuclideanMenuSlice::render()

@@ -9,7 +9,7 @@
 #include "slices/EuclideanMenuSlice.hpp"
 
 
-GameEngine::GameEngine() : fps(100), oldSlice(nullptr)
+GameEngine::GameEngine() : fps(100)
 {
 	//Load a default "mono" font, for helpful debugging.
 	bool foundFont = false;
@@ -34,16 +34,20 @@ GameEngine::GameEngine() : fps(100), oldSlice(nullptr)
 }
 
 
-void GameEngine::setSlice(Slice* slice) {
+void GameEngine::setSlice(Slice* slice, Slice* parent) {
 	slices.push_back(slice);
-	slices.back()->activated(*this, window);
+	slices.back()->activated(*this, parent, window);
 }
 
 
 void GameEngine::remSlice() {
 	//Remove the old one (we can't delete it yet; it's this pointer is still valid).
-	oldSlice = slices.back();
+	Slice* oldSlice = slices.back();
 	slices.pop_back();
+
+	//TODO: Check with the "parent" slice first. (We might use smart pointers to avoid this entirely).
+	//TODO: We can't *quite* delete these, since the parent may point to a static memory address.
+	delete oldSlice;
 }
 
 
@@ -63,11 +67,11 @@ void GameEngine::createGameWindow(const sf::VideoMode& wndSize, const std::strin
     }
 
     //TEMP
-    setSlice(new EuclideanMenuSlice());
+    setSlice(new EuclideanMenuSlice(), nullptr);
 }
 
 
-void GameEngine::YieldToSlice(Slice* newSlice, bool stack)
+void GameEngine::YieldToSlice(Slice* newSlice, Slice* parent, bool stack)
 {
 	//The GameEngine isn't threaded, so we can just replace the current slice on the fly.
 	if (newSlice) {
@@ -75,7 +79,7 @@ void GameEngine::YieldToSlice(Slice* newSlice, bool stack)
 		if (!stack && !slices.empty()) {
 			remSlice();
 		}
-		setSlice(newSlice);
+		setSlice(newSlice, parent);
 	} else {
 		//Removing a Slice.
 		if (slices.empty()) {
@@ -89,9 +93,6 @@ void GameEngine::YieldToSlice(Slice* newSlice, bool stack)
 
 void GameEngine::runGameLoop()
 {
-	//NOTE: Be aware that Slices have full access to every function in GameEngineControl, esp.
-	//      YieldToSlice(). So don't do anything stupid like caching the current Slice unless
-	//      you keep it consistent in both places.
     sf::Clock clock;
     while (window.isOpen()) {
     	//Time elapsed
@@ -103,22 +104,28 @@ void GameEngine::runGameLoop()
             if (event.type == sf::Event::Closed) {
                 window.close();
             } else {
+            	Slice::YieldAction res;
+            	Slice* currSlice = slices.empty() ? nullptr : slices.back();
+
                 //Ask the slice to handle this event.
-                if (!slices.empty()) {
-                	slices.back()->processEvent(event, elapsed);
+                if (currSlice) {
+                	res = currSlice->processEvent(event, elapsed);
                 }
 
                 //The slice may have Yielded
-                if (oldSlice) {
+                if (res.action != Slice::YieldAction::Nothing) {
                 	//TODO: We need to ask the parent slice "should we save this slice?". Basically,
                 	//      if anything calls the Console (and it returns a credible-but-wrong command)
                 	//      then we want to immediately restore the Console with an error message from the
                 	//      parent slice.
                 	//TODO: This might be better done using the "Yield()" style syntax shown earlier.
 
+                	//TEMP
+                	YieldToSlice(res.slice, currSlice, (res.action==Slice::YieldAction::Stack));
+
                 	//Finally delete it.
-                	delete oldSlice;
-                	oldSlice = nullptr;
+                	//delete oldSlice;
+                	//oldSlice = nullptr;
                 }
             }
         }

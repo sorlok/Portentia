@@ -20,9 +20,9 @@ public:
 
 	virtual ~ConsoleSlice() {}
 
-	virtual void activated(GameEngineControl& geControl, sf::RenderWindow& window);
+	virtual void activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
 
-	virtual void processEvent(const sf::Event& event, const sf::Time& elapsed);
+	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
 
 	virtual void render();
 
@@ -32,7 +32,7 @@ private:
 
 	void matchCommands();
 	void appendCurrCommand(bool clearCmd=true);
-	void processCurrCommand();
+	bool processCurrCommand(); ///<Returns true to keep the Console active.
 
 	std::string headerText;
 	std::list<std::string> commands;

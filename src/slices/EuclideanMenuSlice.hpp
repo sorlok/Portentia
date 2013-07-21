@@ -23,16 +23,16 @@ public:
 
 	virtual ~EuclideanMenuSlice() {}
 
-	virtual void activated(GameEngineControl& geControl, sf::RenderWindow& window);
+	virtual void activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
 
-	virtual void processEvent(const sf::Event& event, const sf::Time& elapsed);
+	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
 
 	virtual void render();
 
 private:
 	void resizeViews();
 
-	void processKeyPress(const sf::Event::KeyEvent& key);
+	YieldAction processKeyPress(const sf::Event::KeyEvent& key);
 
 	std::list<sf::Drawable*> items; //Temp
 

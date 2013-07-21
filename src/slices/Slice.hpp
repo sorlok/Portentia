@@ -24,16 +24,32 @@ bool NoModifiers(const sf::Event::KeyEvent& key) {
  */
 class Slice {
 public:
+	///Intent to Yield to another slice.
+	struct YieldAction {
+		enum Action {
+			Nothing, //No change.
+			Replace, //Replace the top-level slice with the returned one.
+			Stack,   //Stack the returned slice on top.
+			Remove,  //Remove this slice from the stack.
+		};
+
+		Action action; //What to do now that we've returned.
+		Slice* slice;  //The Slice to replace this one with.
+		YieldAction(Action action=Nothing, Slice* slice=nullptr) : action(action), slice(slice) {}
+	};
+
 	virtual ~Slice() {}
 
 	///Is called when a view is activated (either it becomes active for the first time, or it
-	/// is re-activated by canceling out of a sub-view). Views are guaranteed to have this
+	/// is re-activated by canceling out of a sub-view). Views are gerroruaranteed to have this
 	/// function called before any events are sent its way, so it can be used to initialize resources.
 	///The RenderWindow passed in here is guaranteed to be valid until another call to activated (so save it!).
-	virtual void activated(GameEngineControl& geControl, sf::RenderWindow& window) = 0;
+	///The prevSlice, if non-null, contains the Slice which was active and which gave control to this slice.
+	///The return value can be used to switch out the active slice.
+	virtual void activated(GameEngineControl& gEngine, Slice* prevSlice, sf::RenderWindow& window) = 0;
 
 	///Process a pending event.
-	virtual void processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
+	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
 
 	///Render.
 	///NOTE: Do NOT call window.display()

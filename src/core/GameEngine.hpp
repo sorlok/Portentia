@@ -18,7 +18,7 @@ public:
 
 	///Replace this Slice with the new one. If "stack" is true, we put this Slice "on top".
 	/// If newSlice is null, we remove the top slice.
-	virtual void YieldToSlice(Slice* newSlice, bool stack) = 0;
+	//virtual void YieldToSlice(Slice* newSlice, bool stack) = 0;
 
 	///Get the default monospace font.
 	virtual const sf::Font& getMonoFont() const = 0;
@@ -37,12 +37,12 @@ public:
 	enum class Position {Default, Center};
 
 	//Set the current Slice
-	void setSlice(Slice* slice);
+	void setSlice(Slice* slice, Slice* parent);
 
 	///Create and show the window
 	void createGameWindow(const sf::VideoMode& wndSize, const std::string& title, Position wndPos=Position::Default);
 
-	virtual void YieldToSlice(Slice* newSlice, bool stack);
+	virtual void YieldToSlice(Slice* newSlice, Slice* parent, bool stack);
 
 	void runGameLoop();
 
@@ -56,7 +56,7 @@ private:
 	sf::Font monoFont;
 	FpsCounter fps;
 
-	Slice* oldSlice;
+	//Slice* oldSlice;
 
 	std::list<Slice*> slices; //The back-most one handles events, but all of them render.
 };

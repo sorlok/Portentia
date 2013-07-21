@@ -8,6 +8,9 @@
 #include "core/GameEngine.hpp"
 
 
+using YieldAction = Slice::YieldAction;
+
+
 ConsoleSlice::ConsoleSlice(const std::string& text, const std::list<std::string>& commands) : Slice(), window(nullptr), geControl(nullptr), headerText(text), commands(commands)
 {
 	//Background color.
@@ -53,7 +56,7 @@ void ConsoleSlice::refreshText()
 }
 
 
-void ConsoleSlice::activated(GameEngineControl& geControl, sf::RenderWindow& window)
+void ConsoleSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
 {
 	//Save
 	this->window = &window;
@@ -124,7 +127,7 @@ void ConsoleSlice::matchCommands()
 }
 
 
-void ConsoleSlice::processCurrCommand()
+bool ConsoleSlice::processCurrCommand()
 {
 	//Match built-in commands first. A command "counts" if the first word (before a space) matches.
 	std::string word = currLine.str();
@@ -133,38 +136,40 @@ void ConsoleSlice::processCurrCommand()
 	//Avoid the insanity.
 	if (word.empty()) {
 		appendCurrCommand();
-		return;
+		return true;
 	}
 
 	//Else, match it.
 	for (const auto& cmd : commands) {
 		if (cmd == word) {
 			//TODO: Communicate this command back to the parent slice.
-			geControl->YieldToSlice(nullptr, false);
-			return;
+			return false;
 		}
 	}
 
 	//We also have some console-level commands. For now, we allow user-level commands to take precedence.
 	if (word=="exit") {
-		geControl->YieldToSlice(nullptr, false);
+		return false;
 	}
 
 	//If not, inform the user that their command is invalid.
 	appendCurrCommand(false);
 	out_buffer.push_back("Unknown command!");
 
-
+	return true;
 }
 
 
-void ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
+YieldAction ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
 	switch (event.type) {
 		case sf::Event::KeyPressed:
 			if (event.key.code==sf::Keyboard::Return) {
 				if (NoModifiers(event.key)) {
-					processCurrCommand();
+					bool keep = processCurrCommand();
+					if (!keep) {
+						return YieldAction(YieldAction::Remove);
+					}
 				}
 			} else if (event.key.code==sf::Keyboard::Tab) {
 				if (NoModifiers(event.key)) {
@@ -172,8 +177,7 @@ void ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 				}
 			} else if (event.key.code==sf::Keyboard::Escape) {
 				if (NoModifiers(event.key)) {
-					geControl->YieldToSlice(nullptr, false);
-					//break;
+					return YieldAction(YieldAction::Remove);
 				}
 			} else if (event.key.code==sf::Keyboard::BackSpace) {
 				if (NoModifiers(event.key)) {
@@ -194,6 +198,8 @@ void ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 			refreshText();
 			break;
 	}
+
+	return YieldAction();
 }
 
 void ConsoleSlice::render()
