@@ -7,6 +7,7 @@
 
 #include <SFML/Graphics.hpp>
 
+class ConsoleSlice;
 
 /**
  * A "menu" slice with various objects arranged in 2-D space and a "character" who walks around and
@@ -31,6 +32,12 @@ public:
 
 private:
 	void resizeViews();
+
+	//React to the results from a returned Console (possibly re-establishing it if there's an error).
+	YieldAction handleConsoleResults();
+
+	//The console for this Slice.
+	ConsoleSlice* console;
 
 	YieldAction processKeyPress(const sf::Event::KeyEvent& key);
 

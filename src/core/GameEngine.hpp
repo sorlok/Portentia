@@ -58,7 +58,7 @@ private:
 	YieldAction addRemMoveSlices(const YieldAction& next, Slice* currSlice);
 
 	bool addSlice(Slice* slice); //Add a Slice to the stack.
-	bool remSlice();
+	bool remSlice(); //Remove. Does *not* free the associated memory.
 
 	mutable sf::RenderWindow window;
 

@@ -26,12 +26,17 @@ public:
 
 	virtual void render();
 
+	void reset();
+
+	std::string getCurrCommand();
+	void appendCommandErrorMessage(const std::string& line);
+
 private:
 	void resizeConsole();
 	void refreshText();
 
-	void matchCommands();
 	void appendCurrCommand(bool clearCmd=true);
+	void matchCommands();
 	bool processCurrCommand(); ///<Returns true to keep the Console active.
 
 	std::string headerText;

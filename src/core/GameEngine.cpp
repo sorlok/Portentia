@@ -9,6 +9,12 @@
 #include "slices/EuclideanMenuSlice.hpp"
 
 
+//Temp: We don't perform memory management of slices.
+namespace {
+EuclideanMenuSlice FirstSlice;
+} //End un-named namespace.
+
+
 GameEngine::GameEngine() : fps(100)
 {
 	//Load a default "mono" font, for helpful debugging.
@@ -60,7 +66,7 @@ bool GameEngine::remSlice() {
 
 	//TODO: Check with the "parent" slice first. (We might use smart pointers to avoid this entirely).
 	//TODO: We can't *quite* delete these, since the parent may point to a static memory address.
-	delete oldSlice;
+	//delete oldSlice;
 	return true;
 }
 
@@ -81,7 +87,7 @@ void GameEngine::createGameWindow(const sf::VideoMode& wndSize, const std::strin
     }
 
     //TEMP
-    setSlice(new EuclideanMenuSlice());
+    setSlice(&FirstSlice);
 }
 
 

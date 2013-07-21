@@ -7,7 +7,8 @@
 #include "slices/ConsoleSlice.hpp"
 
 
-EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr)
+EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr),
+	console(new ConsoleSlice("Add menu items with \"additem\".", {"additem", "clear"}))
 {
 	//TEMP
 	sf::CircleShape* circ = new sf::CircleShape(100, 10.0);
@@ -25,6 +26,25 @@ void EuclideanMenuSlice::save(const std::string& file)
 {
 }
 
+YieldAction EuclideanMenuSlice::handleConsoleResults()
+{
+	//No command means the Console killed itself.
+	std::string line = console->getCurrCommand();
+	if (line.empty()) { return YieldAction(); }
+
+	//Test: magic 9
+	if (line[line.length()-1] == '9') { return YieldAction(); }
+
+	std::stringstream msg;
+	msg <<"Error: \"" <<line <<"\" is not a valid command.";
+
+	//Append it and the error.
+	console->appendCommandErrorMessage(msg.str());
+
+	//Re-activate
+	return YieldAction(YieldAction::Stack, console);
+}
+
 YieldAction EuclideanMenuSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
 {
 	//Save
@@ -33,6 +53,13 @@ YieldAction EuclideanMenuSlice::activated(GameEngineControl& geControl, Slice* p
 
 	//Size the view appropriately.
 	resizeViews();
+
+	//Are we returning from a Console?
+	if (prevSlice==console) {
+		return handleConsoleResults();
+	}
+
+	//Done.
 	return YieldAction();
 }
 
@@ -73,7 +100,8 @@ YieldAction EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
 		case sf::Keyboard::Return:
 			if (NoModifiers(key)) {
 				//TODO: Open a "Console"
-				return YieldAction(YieldAction::Stack, new ConsoleSlice("Add menu items with \"additem\".", {"abc", "aaa", "def","ghi"}));
+				console->reset();
+				return YieldAction(YieldAction::Stack, console);
 			}
 			break;
 	}

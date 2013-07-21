@@ -14,6 +14,23 @@ ConsoleSlice::ConsoleSlice(const std::string& text, const std::list<std::string>
 	bkgrd.setFillColor(sf::Color(0x00, 0x00, 0x66, 0x66));
 	bkgrd.setOutlineColor(sf::Color::Blue);
 	bkgrd.setOutlineThickness(1.0);
+
+	//Header text.
+	reset();
+}
+
+
+void ConsoleSlice::reset()
+{
+	//Reset our buffer and initialize it.
+	out_buffer.clear();
+	currLine.str("");
+
+	//Separate by newline
+	boost::split(out_buffer, headerText, boost::is_any_of("\n"));
+
+	//Text shared to all Consoles.
+	out_buffer.push_front("This is a simple Console. Use Tab, Enter, and Esc.");
 }
 
 
@@ -67,16 +84,6 @@ YieldAction ConsoleSlice::activated(GameEngineControl& geControl, Slice* prevSli
 	text.setColor(sf::Color::White);
 	text.setCharacterSize(15);
 
-	//Reset our buffer and initialize it.
-	out_buffer.clear();
-	currLine.str("");
-
-	//Separate by newline
-	boost::split(out_buffer, headerText, boost::is_any_of("\n"));
-
-	//Text shared to all Consoles.
-	out_buffer.push_front("This is a simple Console. Use Tab, Enter, and Esc.");
-
 	//The last line is always the start of a new command.
 	//out_buffer.push_back("$ ");
 	refreshText();
@@ -125,6 +132,20 @@ void ConsoleSlice::matchCommands()
 }
 
 
+std::string ConsoleSlice::getCurrCommand()
+{
+	return currLine.str();
+}
+
+
+void ConsoleSlice::appendCommandErrorMessage(const std::string& line)
+{
+	appendCurrCommand(false);
+	out_buffer.push_back(line);
+}
+
+
+
 bool ConsoleSlice::processCurrCommand()
 {
 	//Match built-in commands first. A command "counts" if the first word (before a space) matches.
@@ -147,6 +168,7 @@ bool ConsoleSlice::processCurrCommand()
 
 	//We also have some console-level commands. For now, we allow user-level commands to take precedence.
 	if (word=="exit") {
+		currLine.str(""); //Force reset.
 		return false;
 	}
 
