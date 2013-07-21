@@ -6,8 +6,6 @@
 #include "core/GameEngine.hpp"
 #include "slices/ConsoleSlice.hpp"
 
-using YieldAction = Slice::YieldAction;
-
 
 EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr)
 {
@@ -27,7 +25,7 @@ void EuclideanMenuSlice::save(const std::string& file)
 {
 }
 
-void EuclideanMenuSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
+YieldAction EuclideanMenuSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
 {
 	//Save
 	this->window = &window;
@@ -35,6 +33,7 @@ void EuclideanMenuSlice::activated(GameEngineControl& geControl, Slice* prevSlic
 
 	//Size the view appropriately.
 	resizeViews();
+	return YieldAction();
 }
 
 void EuclideanMenuSlice::resizeViews()

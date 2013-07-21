@@ -5,14 +5,22 @@
 
 //Forward-declarations
 class GameEngineControl;
+class Slice;
 
-//TODO: Something better.
-namespace {
-//Helper: No modifiers
-bool NoModifiers(const sf::Event::KeyEvent& key) {
-	return !(key.alt || key.control || key.shift || key.system);
-}
-} //End anon namespace
+///Intent to Yield to another slice.
+struct YieldAction {
+	enum Action {
+		Nothing, //No change.
+		Replace, //Replace the top-level slice with the returned one.
+		Stack,   //Stack the returned slice on top.
+		Remove,  //Remove this slice from the stack.
+	};
+
+	Action action; //What to do now that we've returned.
+	Slice* slice;  //The Slice to replace this one with.
+	YieldAction(Action action=Nothing, Slice* const slice=nullptr) : action(action), slice(slice) {}
+};
+
 
 
 /**
@@ -24,20 +32,6 @@ bool NoModifiers(const sf::Event::KeyEvent& key) {
  */
 class Slice {
 public:
-	///Intent to Yield to another slice.
-	struct YieldAction {
-		enum Action {
-			Nothing, //No change.
-			Replace, //Replace the top-level slice with the returned one.
-			Stack,   //Stack the returned slice on top.
-			Remove,  //Remove this slice from the stack.
-		};
-
-		Action action; //What to do now that we've returned.
-		Slice* slice;  //The Slice to replace this one with.
-		YieldAction(Action action=Nothing, Slice* slice=nullptr) : action(action), slice(slice) {}
-	};
-
 	virtual ~Slice() {}
 
 	///Is called when a view is activated (either it becomes active for the first time, or it
@@ -46,7 +40,8 @@ public:
 	///The RenderWindow passed in here is guaranteed to be valid until another call to activated (so save it!).
 	///The prevSlice, if non-null, contains the Slice which was active and which gave control to this slice.
 	///The return value can be used to switch out the active slice.
-	virtual void activated(GameEngineControl& gEngine, Slice* prevSlice, sf::RenderWindow& window) = 0;
+	///The YieldAction returned is only ignored for the very first Slice set.
+	virtual YieldAction activated(GameEngineControl& gEngine, Slice* prevSlice, sf::RenderWindow& window) = 0;
 
 	///Process a pending event.
 	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
@@ -54,4 +49,10 @@ public:
 	///Render.
 	///NOTE: Do NOT call window.display()
 	virtual void render() = 0;
+
+protected:
+	//Helper: Test if no modifiers are set for the given KeyEent.
+	static bool NoModifiers(const sf::Event::KeyEvent& key) {
+		return !(key.alt || key.control || key.shift || key.system);
+	}
 };

@@ -20,7 +20,7 @@ public:
 
 	virtual ~ConsoleSlice() {}
 
-	virtual void activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
+	virtual YieldAction activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
 
 	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
 

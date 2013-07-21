@@ -8,6 +8,8 @@
 
 //Forward declarations
 class Slice;
+struct YieldAction;
+
 
 /**
  * Class allowing Slices to control the game engine (e.g., "Set a new Slice")
@@ -36,13 +38,13 @@ public:
 	///How to position the window.
 	enum class Position {Default, Center};
 
-	//Set the current Slice
-	void setSlice(Slice* slice, Slice* parent);
+	//Set the current Slice; replace all others in the stack (call once, at the game's start).
+	void setSlice(Slice* slice);
 
 	///Create and show the window
 	void createGameWindow(const sf::VideoMode& wndSize, const std::string& title, Position wndPos=Position::Default);
 
-	virtual void YieldToSlice(Slice* newSlice, Slice* parent, bool stack);
+	//virtual void YieldToSlice(Slice* newSlice, Slice* parent, bool stack);
 
 	void runGameLoop();
 
@@ -50,13 +52,18 @@ public:
 	virtual const sf::Font& getMonoFont() const;
 
 private:
-	void remSlice();
+	//Portions of the game update loop
+	void processEvents(const sf::Time& elapsed);
+	void repaintGame() const;
+	YieldAction addRemMoveSlices(const YieldAction& next, Slice* currSlice);
 
-	sf::RenderWindow window;
+	bool addSlice(Slice* slice); //Add a Slice to the stack.
+	bool remSlice();
+
+	mutable sf::RenderWindow window;
+
 	sf::Font monoFont;
 	FpsCounter fps;
-
-	//Slice* oldSlice;
 
 	std::list<Slice*> slices; //The back-most one handles events, but all of them render.
 };

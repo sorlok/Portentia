@@ -8,9 +8,6 @@
 #include "core/GameEngine.hpp"
 
 
-using YieldAction = Slice::YieldAction;
-
-
 ConsoleSlice::ConsoleSlice(const std::string& text, const std::list<std::string>& commands) : Slice(), window(nullptr), geControl(nullptr), headerText(text), commands(commands)
 {
 	//Background color.
@@ -56,7 +53,7 @@ void ConsoleSlice::refreshText()
 }
 
 
-void ConsoleSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
+YieldAction ConsoleSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
 {
 	//Save
 	this->window = &window;
@@ -83,6 +80,7 @@ void ConsoleSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf:
 	//The last line is always the start of a new command.
 	//out_buffer.push_back("$ ");
 	refreshText();
+	return YieldAction();
 }
 
 

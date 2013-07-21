@@ -34,13 +34,26 @@ GameEngine::GameEngine() : fps(100)
 }
 
 
-void GameEngine::setSlice(Slice* slice, Slice* parent) {
-	slices.push_back(slice);
-	slices.back()->activated(*this, parent, window);
+void GameEngine::setSlice(Slice* slice) {
+	slices.clear();
+	if (addSlice(slice)) {
+		slices.back()->activated(*this, nullptr, window); //TODO: Duplicate code...
+	}
 }
 
 
-void GameEngine::remSlice() {
+bool GameEngine::addSlice(Slice* slice) {
+	if (!slice) { return false; }
+
+	slices.push_back(slice);
+	return true;
+}
+
+
+bool GameEngine::remSlice() {
+	//Nothing?
+	if (slices.empty()) { return false; }
+
 	//Remove the old one (we can't delete it yet; it's this pointer is still valid).
 	Slice* oldSlice = slices.back();
 	slices.pop_back();
@@ -48,6 +61,7 @@ void GameEngine::remSlice() {
 	//TODO: Check with the "parent" slice first. (We might use smart pointers to avoid this entirely).
 	//TODO: We can't *quite* delete these, since the parent may point to a static memory address.
 	delete oldSlice;
+	return true;
 }
 
 
@@ -67,27 +81,24 @@ void GameEngine::createGameWindow(const sf::VideoMode& wndSize, const std::strin
     }
 
     //TEMP
-    setSlice(new EuclideanMenuSlice(), nullptr);
+    setSlice(new EuclideanMenuSlice());
 }
 
 
-void GameEngine::YieldToSlice(Slice* newSlice, Slice* parent, bool stack)
+YieldAction GameEngine::addRemMoveSlices(const YieldAction& next, Slice* currSlice)
 {
-	//The GameEngine isn't threaded, so we can just replace the current slice on the fly.
-	if (newSlice) {
-		//Adding a Slice.
-		if (!stack && !slices.empty()) {
-			remSlice();
-		}
-		setSlice(newSlice, parent);
-	} else {
-		//Removing a Slice.
-		if (slices.empty()) {
-			throw std::runtime_error("Can't remove the current Slice; nothing underneath!");
-		}
-		remSlice();
+	//Remove a Slice if we have to. Failure to do so returns "Nothing".
+	if ((next.action==YieldAction::Replace) || (next.action==YieldAction::Remove)) {
+		if (!remSlice()) { return YieldAction(); }
 	}
 
+	//Add a Slice if we have to. Failure to do so returns "Nothing".
+	if ((next.action==YieldAction::Replace) || (next.action==YieldAction::Stack)) {
+		if (!addSlice(next.slice)) { return YieldAction(); }
+	}
+
+	//At this point, we've successfully modified the Slice stack. Notify the top-most Slice either way.
+	return slices.back()->activated(*this, currSlice, window);
 }
 
 
@@ -99,52 +110,60 @@ void GameEngine::runGameLoop()
     	sf::Time elapsed = clock.restart();
 
     	//Process all events.
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else {
-            	Slice::YieldAction res;
-            	Slice* currSlice = slices.empty() ? nullptr : slices.back();
+    	processEvents(elapsed);
 
-                //Ask the slice to handle this event.
-                if (currSlice) {
-                	res = currSlice->processEvent(event, elapsed);
-                }
-
-                //The slice may have Yielded
-                if (res.action != Slice::YieldAction::Nothing) {
-                	//TODO: We need to ask the parent slice "should we save this slice?". Basically,
-                	//      if anything calls the Console (and it returns a credible-but-wrong command)
-                	//      then we want to immediately restore the Console with an error message from the
-                	//      parent slice.
-                	//TODO: This might be better done using the "Yield()" style syntax shown earlier.
-
-                	//TEMP
-                	YieldToSlice(res.slice, currSlice, (res.action==Slice::YieldAction::Stack));
-
-                	//Finally delete it.
-                	//delete oldSlice;
-                	//oldSlice = nullptr;
-                }
-            }
-        }
-
-        //Now ask the slice to draw.
-        window.clear();
-        for (Slice* sl : slices) {
-        	sl->render();
-        	window.setView(window.getDefaultView());
-        }
-
-        //Update the FPS counter, external to the actual Slice.
-        fps.update(elapsed);
-        window.draw(fps);
-
-        //Draw
-        window.display();
+    	//Paint everything
+    	repaintGame();
     }
 }
+
+
+void GameEngine::processEvents(const sf::Time& elapsed)
+{
+	//Update the FPS counter.
+	fps.update(elapsed);
+
+	//Update based on events.
+	sf::Event event;
+	while (window.pollEvent(event)) {
+		if (event.type == sf::Event::Closed) {
+			window.close();
+		} else {
+			YieldAction res;
+			Slice* currSlice = slices.empty() ? nullptr : slices.back();
+
+			//Ask the slice to handle this event.
+			if (currSlice) {
+				res = currSlice->processEvent(event, elapsed);
+			}
+
+			//The slice may have Yielded
+			while (res.action != YieldAction::Nothing) {
+				//We are either replacing, removing, or stacking. This can trigger additional replaces/removes stacks.
+				//Therefore, forward to the next Slice.
+				res = addRemMoveSlices(res, currSlice);
+			}
+		}
+	}
+}
+
+
+void GameEngine::repaintGame() const
+{
+	//Now ask the slice to draw.
+	window.clear();
+	for (Slice* sl : slices) {
+		sl->render();
+		window.setView(window.getDefaultView());
+	}
+
+	//Paint the FPS counter over all slices.
+	window.draw(fps);
+
+	//Draw
+	window.display();
+}
+
 
 const sf::Font& GameEngine::getMonoFont() const
 {
