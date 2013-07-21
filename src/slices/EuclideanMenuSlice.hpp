@@ -36,6 +36,9 @@ private:
 	//React to the results from a returned Console (possibly re-establishing it if there's an error).
 	YieldAction handleConsoleResults();
 
+	//Add an item to the menu (at the center of the screen). Params do nothing for now.
+	YieldAction addNewMenuItem(const std::list<std::string>& params);
+
 	//The console for this Slice.
 	ConsoleSlice* console;
 

@@ -26,22 +26,40 @@ void EuclideanMenuSlice::save(const std::string& file)
 {
 }
 
+
+YieldAction EuclideanMenuSlice::addNewMenuItem(const std::list<std::string>& params)
+{
+
+
+	//No params, so this always succeeds.
+	return YieldAction();
+}
+
+
 YieldAction EuclideanMenuSlice::handleConsoleResults()
 {
+	std::list<std::string> line = console->getCurrCommand();
+
 	//No command means the Console killed itself.
-	std::string line = console->getCurrCommand();
-	if (line.empty()) { return YieldAction(); }
+	if (line.empty() || line.front().empty()) { return YieldAction(); }
 
-	//Test: magic 9
-	if (line[line.length()-1] == '9') { return YieldAction(); }
+	//Else, the first item in the line is the command.
+	std::string cmd = line.front();
+	line.erase(line.begin());
 
+	//Switch on this command.
+	if (cmd == "clear") {
+		//For now, we treat this as an error.
+		console->appendCommandErrorMessage("Error: \"clear\" is not yet implemented.");
+		return YieldAction(YieldAction::Stack, console);
+	} else if (cmd == "additem") {
+		return addNewMenuItem(line);
+	}
+
+	//Else, throw the command back to the terminal.
 	std::stringstream msg;
-	msg <<"Error: \"" <<line <<"\" is not a valid command.";
-
-	//Append it and the error.
+	msg <<"Error, unexpected command: \"" <<cmd <<"\"";
 	console->appendCommandErrorMessage(msg.str());
-
-	//Re-activate
 	return YieldAction(YieldAction::Stack, console);
 }
 

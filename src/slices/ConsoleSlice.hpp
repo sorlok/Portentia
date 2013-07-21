@@ -28,7 +28,7 @@ public:
 
 	void reset();
 
-	std::string getCurrCommand();
+	std::list<std::string> getCurrCommand();
 	void appendCommandErrorMessage(const std::string& line);
 
 private:

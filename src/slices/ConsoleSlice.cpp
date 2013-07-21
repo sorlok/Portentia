@@ -132,9 +132,14 @@ void ConsoleSlice::matchCommands()
 }
 
 
-std::string ConsoleSlice::getCurrCommand()
+std::list<std::string> ConsoleSlice::getCurrCommand()
 {
-	return currLine.str();
+	//Split by spaces, remove duplicates (multiple spaces).
+	std::list<std::string> res;
+	std::string line = currLine.str();
+	boost::split(res, line, boost::is_any_of(" "), boost::token_compress_on);
+
+	return res;
 }
 
 
@@ -149,6 +154,9 @@ void ConsoleSlice::appendCommandErrorMessage(const std::string& line)
 bool ConsoleSlice::processCurrCommand()
 {
 	//Match built-in commands first. A command "counts" if the first word (before a space) matches.
+	std::list<std::string>  cmds = getCurrCommand();
+
+
 	std::string word = currLine.str();
 	word = word.substr(0, word.find(' '));
 
