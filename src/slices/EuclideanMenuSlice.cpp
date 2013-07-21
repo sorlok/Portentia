@@ -1,5 +1,6 @@
 #include "EuclideanMenuSlice.hpp"
 
+#include <utility>
 #include <iostream>
 #include <stdexcept>
 
@@ -29,6 +30,12 @@ void EuclideanMenuSlice::save(const std::string& file)
 
 YieldAction EuclideanMenuSlice::addNewMenuItem(const std::list<std::string>& params)
 {
+	//TEMP
+	sf::RectangleShape* rect = new sf::RectangleShape(sf::Vector2f(150, 50));
+	rect->setFillColor(sf::Color::Green);
+	rect->setPosition(-600, 80);
+	items.push_back(rect);
+	resizeViews();
 
 
 	//No params, so this always succeeds.
@@ -91,9 +98,44 @@ void EuclideanMenuSlice::resizeViews()
 	mainView.setSize(sz.x, sz.y);
 
 	//The minimap view is the size of the entire 2-D map area to render, and is centered on it. It's also off-center
-	//TODO
-	minimapView.setCenter(0, 0);
-	minimapView.setSize(1000,1000);
+	std::pair<float, float> xRng(-500, 500); //min/max
+	std::pair<float, float> yRng(-500, 500); //min/max
+
+	//
+	// TODO: We need a spatial index to return the bounds. We *also* need to include the size of the object,
+	//       not just its position. We *also* need to subclass Drawable (since we aren't always adding Shapes).
+	//
+
+	//Better init.
+	if (!items.empty()) {
+		//TEMP: casting...
+		xRng.first = xRng.second = ((sf::Shape*)items.front())->getPosition().x;
+		yRng.first = yRng.second = ((sf::Shape*)items.front())->getPosition().y;
+	}
+
+	//Measure it.
+	for (sf::Drawable* item : items) {
+		//TEMP: casting...
+		float x = ((sf::Shape*)item)->getPosition().x;
+		float y = ((sf::Shape*)item)->getPosition().y;
+		xRng.first = std::min(xRng.first, x);
+		xRng.second = std::max(xRng.second, x);
+		yRng.first = std::min(yRng.first, y);
+		yRng.second = std::max(yRng.second, y);
+	}
+
+	//Set it.
+	float xDiff = xRng.second-xRng.first;
+	float yDiff = yRng.second-yRng.first;
+
+	//TEMP: Widen it
+	xRng.first -= 300;
+	yRng.first -= 300;
+	xDiff += 600;
+	yDiff += 600;
+
+	minimapView.setCenter(xRng.first+xDiff/2.0, yRng.first+yDiff/2.0);
+	minimapView.setSize(xDiff, yDiff);
 	minimapView.setViewport(sf::FloatRect(0.79, 0.01, 0.2, 0.2));
 }
 
