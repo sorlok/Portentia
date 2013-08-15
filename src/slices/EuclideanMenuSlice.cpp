@@ -157,7 +157,7 @@ YieldAction EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
 	if (!geControl) { throw std::runtime_error("Can't process events without a GameEngineControl"); }
 
 	switch (key.code) {
-		case sf::Keyboard::Return:
+		case sf::Keyboard::Escape:
 			if (NoModifiers(key)) {
 				//TODO: Open a "Console"
 				console->reset();
