@@ -7,6 +7,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "index/LazySpatialIndex.hpp"
+
 class ConsoleSlice;
 
 /**
@@ -44,6 +46,7 @@ private:
 
 	YieldAction processKeyPress(const sf::Event::KeyEvent& key);
 
+	LazySpatialIndex<sf::Drawable*> items_sp;
 	std::list<sf::Drawable*> items; //Temp
 
 	GameEngineControl* geControl;

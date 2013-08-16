@@ -68,6 +68,11 @@ find_package(SFML REQUIRED)
 include_directories(${SFML_INCLUDE_DIR})
 LIST(APPEND LibraryList ${SFML_LIBRARY})
 
+#Find the "spatial index" library. Ubuntu has it, or: (https://github.com/libspatialindex/libspatialindex)
+find_package(SpatialIndex REQUIRED)
+include_directories(${SPATIALINDEX_INCLUDE_DIR})
+LIST(APPEND LibraryList ${SPATIALINDEX_LIBRARY})
+
 #Our source files.
 FILE(GLOB_RECURSE OurSrcFiles "src/*.c" "src/*.cpp")
 
