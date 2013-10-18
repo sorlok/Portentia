@@ -46,8 +46,8 @@ public:
 	public:
 		ItemType item;
 		bool start_;
-		bool isStart () { return start_; }
-		bool isEnd() { return !start_; }
+		bool isStart() const { return start_; }
+		bool isEnd() const { return !start_; }
 		double size; //start+size = end
 		AxisPoint(ItemType item, bool isStart, double size) : item(item), start_(isStart), size(size) {}
 	};
@@ -57,6 +57,8 @@ public:
 
 	///Helper: what to do when we "find" an item
 	typedef std::function<void (ItemType)> Action;
+	typedef std::function<void (const ItemType)> ConstAction;
+
 	/*class Action  {
 	public:
 		void doAction(ItemType item) = 0;
@@ -76,14 +78,14 @@ public:
 	public:
 		Rectangle(double x, double y, double width, double height) : x(x), y(y), width(width), height(height) {}
 
-		Point getCenter();
+		Point getCenter() const;
 
 		//We can have negative widths/heights
-		Point getMin();
-		Point getMax();
+		Point getMin() const;
+		Point getMax() const;
 
 		//For zero/negative width OR height.
-		bool isEmpty();
+		bool isEmpty() const;
 
 		double x;
 		double y;
@@ -130,6 +132,7 @@ public:
 
 	//In case you want all of them.
 	void forAllItems(Action toDo);
+	void forAllItems(ConstAction toDo) const;
 
 	//Perform an action on all items within a given range
 	//toDo and doOnFalsePositives can be null; the first is the action to perform on a given
@@ -144,7 +147,7 @@ private:
 	double getNegHealth(const std::map<double, std::vector<AxisPoint>>& axis, double max_size);
 
 	//Helper: Add, but deal with arrays
-	void add_to_axis(std::map<double, std::vector<AxisPoint>>& axis, double key, const AxisPoint& value);
+	void add_to_axis(AxisMap& axis, double key, const AxisPoint& value);
 
 	//Return the "actual" rectangle used for searching.
 	Rectangle getActualSearchRectangle(Rectangle src);
@@ -175,7 +178,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getCenter()
+typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getCenter() const
 {
 	return LazySpatialIndex<ItemType>::Point(
 		x + width/2,
@@ -185,7 +188,7 @@ typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle
 
 //We can have negative widths/heights
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getMin()
+typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getMin() const
 {
 	return LazySpatialIndex<ItemType>::Point(
 		std::min(x, x+width),
@@ -194,7 +197,7 @@ typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle
 }
 
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getMax()
+typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getMax() const
 {
 	return LazySpatialIndex<ItemType>::Point(
 		std::max(x, x+width),
@@ -203,7 +206,7 @@ typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle
 }
 
 template <class ItemType>
-bool LazySpatialIndex<ItemType>::Rectangle::isEmpty()
+bool LazySpatialIndex<ItemType>::Rectangle::isEmpty() const
 {
 	return width<=0 || height<=0;
 }
@@ -242,16 +245,17 @@ typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::estimateH
 template <class ItemType>
 void LazySpatialIndex<ItemType>::addItem(const ItemType& item, const LazySpatialIndex<ItemType>::Rectangle& bounds)
 {
-	if (bounds.getMin().x>0) { throw std::runtime_error("Boundary rectangle is out of bounds."); }
+	//TODO: What was this check for? It doesn't make sense... ~Seth
+	//if (bounds.getMin().x>0) { throw std::runtime_error("Boundary rectangle is out of bounds."); }
 
 	//We can easily support this later, if required.
 	if (bounds.width==0 || bounds.height==0) { std::runtime_error("width/height must be non-zero."); }
 
 	//Insert start/end points into both the x and y axis.
-	add_to_axis(axis_x, bounds.getMin().x, new AxisPoint(item, true, bounds.width));
-	add_to_axis(axis_x, bounds.getMax().x, new AxisPoint(item, false, bounds.width));
-	add_to_axis(axis_y, bounds.getMin().y, new AxisPoint(item, true, bounds.height));
-	add_to_axis(axis_y, bounds.getMax().y, new AxisPoint(item, false, bounds.height));
+	add_to_axis(axis_x, bounds.getMin().x, AxisPoint(item, true, bounds.width));
+	add_to_axis(axis_x, bounds.getMax().x, AxisPoint(item, false, bounds.width));
+	add_to_axis(axis_y, bounds.getMin().y, AxisPoint(item, true, bounds.height));
+	add_to_axis(axis_y, bounds.getMax().y, AxisPoint(item, false, bounds.height));
 
 	//Update the maximum width/height
 	maxWidth = std::max(maxWidth, bounds.width);
@@ -304,11 +308,37 @@ void LazySpatialIndex<ItemType>::forAllItems(LazySpatialIndex<ItemType>::Action 
 	//When scanning the entire axis, we only need to respond to "start" points.
 	//int foundPoints = 0;
 	for (const auto& ap : axis_x) {
-		for (const AxisPoint& it : ap) {
+		for (const AxisPoint& it : ap.second) {
 			//Avoid firing twice:
 			if (it.isStart()) {
 				//"do" this action.
-				toDo.doAction(it.item);
+				toDo(it.item);
+				//foundPoints++;
+			}
+
+			//We can stop early if we're processed half of all points on this axis.
+			//NOTE: This assumption can still be used if we apply some bookkeeping; but we can't
+			//      just apply it blindly here (since Items may share AxisPoints).
+			//if (foundPoints >= axis_x.size()/2) {
+			//	break;
+			//}
+		}
+	}
+}
+
+
+//TODO: Can we merge these?
+template <class ItemType>
+void LazySpatialIndex<ItemType>::forAllItems(LazySpatialIndex<ItemType>::ConstAction toDo) const
+{
+	//When scanning the entire axis, we only need to respond to "start" points.
+	//int foundPoints = 0;
+	for (const auto& ap : axis_x) {
+		for (const AxisPoint& it : ap.second) {
+			//Avoid firing twice:
+			if (it.isStart()) {
+				//"do" this action.
+				toDo(it.item);
 				//foundPoints++;
 			}
 

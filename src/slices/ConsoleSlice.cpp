@@ -225,6 +225,9 @@ YieldAction ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& e
 			}
 			refreshText();
 			break;
+
+		//Else, don't handle.
+		default: break;
 	}
 
 	return YieldAction();

@@ -33,6 +33,12 @@ public:
 	virtual void render();
 
 private:
+	//Helper: keep our two spatial indexes in sync. "Checks" will fail if they are not true for both.
+	void addItem(sf::Drawable* item, const sf::FloatRect& bounds);
+	bool isItemsEmpty() const;
+	const sf::Drawable* get_first_item() const;
+	void check_all_items() const;
+
 	void resizeViews();
 
 	//React to the results from a returned Console (possibly re-establishing it if there's an error).

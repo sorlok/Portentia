@@ -1,5 +1,7 @@
 #include "EuclideanMenuSlice.hpp"
 
+#include <set>
+#include <algorithm>
 #include <utility>
 #include <iostream>
 #include <stdexcept>
@@ -15,7 +17,7 @@ EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(n
 	sf::CircleShape* circ = new sf::CircleShape(100, 10.0);
 	circ->setFillColor(sf::Color::Blue);
 	circ->setPosition(100, 100);
-	items.push_back(circ);
+	addItem(circ, circ->getGlobalBounds());
 }
 
 void EuclideanMenuSlice::load(const std::string& file)
@@ -34,7 +36,7 @@ YieldAction EuclideanMenuSlice::addNewMenuItem(const std::list<std::string>& par
 	sf::RectangleShape* rect = new sf::RectangleShape(sf::Vector2f(150, 50));
 	rect->setFillColor(sf::Color::Green);
 	rect->setPosition(-600, 80);
-	items.push_back(rect);
+	addItem(rect, rect->getGlobalBounds());
 	resizeViews();
 
 
@@ -107,14 +109,16 @@ void EuclideanMenuSlice::resizeViews()
 	//
 
 	//Better init.
-	if (!items.empty()) {
+	if (!isItemsEmpty()) {
 		//TEMP: casting...
-		xRng.first = xRng.second = ((sf::Shape*)items.front())->getPosition().x;
-		yRng.first = yRng.second = ((sf::Shape*)items.front())->getPosition().y;
+		xRng.first = xRng.second = ((sf::Shape*)get_first_item())->getPosition().x;
+		yRng.first = yRng.second = ((sf::Shape*)get_first_item())->getPosition().y;
 	}
 
 	//Measure it.
-	for (sf::Drawable* item : items) {
+	check_all_items();
+	items_sp.forAllItems([&xRng, &yRng](sf::Drawable* item) {
+//	for (sf::Drawable* item : items) {
 		//TEMP: casting...
 		float x = ((sf::Shape*)item)->getPosition().x;
 		float y = ((sf::Shape*)item)->getPosition().y;
@@ -122,7 +126,8 @@ void EuclideanMenuSlice::resizeViews()
 		xRng.second = std::max(xRng.second, x);
 		yRng.first = std::min(yRng.first, y);
 		yRng.second = std::max(yRng.second, y);
-	}
+//	}
+	});
 
 	//Set it.
 	float xDiff = xRng.second-xRng.first;
@@ -146,6 +151,9 @@ YieldAction EuclideanMenuSlice::processEvent(const sf::Event& event, const sf::T
 		case sf::Event::KeyPressed:
 			res = processKeyPress(event.key);
 			break;
+
+		//Else, don't handle
+		default: break;
 	}
 
 	return res;
@@ -164,6 +172,9 @@ YieldAction EuclideanMenuSlice::processKeyPress(const sf::Event::KeyEvent& key)
 				return YieldAction(YieldAction::Stack, console);
 			}
 			break;
+
+		//Else, don't handle
+		default: break;
 	}
 
 	return YieldAction();
@@ -176,9 +187,11 @@ void EuclideanMenuSlice::render()
 
 	//First, draw everything to the main view.
 	window->setView(mainView);
-	for (sf::Drawable* item : items) {
+	check_all_items();
+	items_sp.forAllItems([this](sf::Drawable* item) {
+	//for (sf::Drawable* item : items) {
 		window->draw(*item);
-	}
+	});
 
 	//Draw a background for the minimap.
 	window->setView(window->getDefaultView());
@@ -190,9 +203,64 @@ void EuclideanMenuSlice::render()
 
 	//Now, draw the minimap
 	window->setView(minimapView);
-	for (sf::Drawable* item : items) {
+	check_all_items();
+	items_sp.forAllItems([this](sf::Drawable* item) {
+	//for (sf::Drawable* item : items) {
 		window->draw(*item);
+	});
+}
+
+
+void EuclideanMenuSlice::addItem(sf::Drawable* item, const sf::FloatRect& bounds)
+{
+	//Convert to SFML
+	LazySpatialIndex<sf::Drawable*>::Rectangle boundsR(bounds.left, bounds.top, bounds.width, bounds.height);
+
+	//Add to both.
+	items.push_back(item);
+	items_sp.addItem(item, boundsR);
+}
+
+bool EuclideanMenuSlice::isItemsEmpty() const
+{
+	//Check both:
+	if (items.size() != items_sp.totalItems) {
+		throw std::runtime_error("isItemsEmpty() size mismatch.");
 	}
 
-
+	//Always return the operation on the new set.
+	return items_sp.totalItems==0;
 }
+
+const sf::Drawable* EuclideanMenuSlice::get_first_item() const {
+	const sf::Drawable* it1 = items.front();
+	const sf::Drawable* it2 = nullptr;
+	items_sp.forAllItems([it1, &it2](const sf::Drawable* item) {
+		if (item==it1) { it2=it1; return; }
+	});
+	if (it2) {
+		return it2;
+	}
+	throw std::runtime_error("get_first_item() not contained in items_sp.");
+}
+
+void EuclideanMenuSlice::check_all_items() const {
+	std::set<const sf::Drawable*> items1;
+	for (sf::Drawable* item : items) {
+		items1.insert(item);
+	}
+
+	std::set<const sf::Drawable*> items2;
+	items_sp.forAllItems([&items2](sf::Drawable* item) {
+		items2.insert(item);
+	});
+
+	if (items1.size() != items2.size()) {
+		throw std::runtime_error("Sets do not contain the same number of elements.");
+	}
+	if (!std::equal(items1.begin(), items1.end(), items2.begin())) {
+		throw std::runtime_error("Sets are not equal!");
+	}
+}
+
+
