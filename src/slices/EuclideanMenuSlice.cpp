@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <utility>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 
 #include "core/GameEngine.hpp"
@@ -11,7 +12,7 @@
 
 
 EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr),
-	console(new ConsoleSlice("Add menu items with \"additem\".", {"additem", "clear"}))
+	console(new ConsoleSlice("Add menu items with \"additem\".", {"additem", "save", "clear"}))
 {
 	//TEMP
 	sf::CircleShape* circ = new sf::CircleShape(100, 10.0);
@@ -27,6 +28,24 @@ void EuclideanMenuSlice::load(const std::string& file)
 
 void EuclideanMenuSlice::save(const std::string& file)
 {
+	const std::string Q = "\"";
+
+	std::ofstream out(file);
+	out <<"{\n";
+	out <<"  " <<Q <<"filename" <<Q <<" : " <<Q <<file <<Q <<"\n";
+	out <<"  " <<Q <<"shapes" <<Q <<" : " <<"\n";
+
+	//Use our comma trick to print items.
+	out <<"    {";
+	std::string comma = "";
+	items_sp.forAllItems([&out,&Q,&comma](sf::Drawable* item) {
+		out <<comma <<"\n      " <<Q <<item <<Q <<" : " <<Q <<"X" <<Q;
+		comma = ",";
+	});
+	out <<"\n    }\n";
+
+	//Done
+	out <<"}\n";
 }
 
 
@@ -41,6 +60,23 @@ YieldAction EuclideanMenuSlice::addNewMenuItem(const std::list<std::string>& par
 
 
 	//No params, so this always succeeds.
+	return YieldAction();
+}
+
+YieldAction EuclideanMenuSlice::saveToFile(const std::list<std::string>& params)
+{
+	//Determine the name of this file. The user may also provide a name.
+	if (params.empty() && currFileName.empty()) {
+		console->appendCommandErrorMessage("Error: \"save\" requires a file name, no default exists for this map.");
+		return YieldAction(YieldAction::Stack, console);
+	}
+
+	if (!params.empty()) {
+		currFileName = params.front();
+	}
+	save(currFileName);
+
+	//Done.
 	return YieldAction();
 }
 
@@ -63,6 +99,8 @@ YieldAction EuclideanMenuSlice::handleConsoleResults()
 		return YieldAction(YieldAction::Stack, console);
 	} else if (cmd == "additem") {
 		return addNewMenuItem(line);
+	} else if (cmd == "save") {
+		return saveToFile(line);
 	}
 
 	//Else, throw the command back to the terminal.

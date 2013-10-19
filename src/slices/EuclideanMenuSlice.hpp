@@ -47,6 +47,9 @@ private:
 	//Add an item to the menu (at the center of the screen). Params do nothing for now.
 	YieldAction addNewMenuItem(const std::list<std::string>& params);
 
+	//Save this layout to a file.
+	YieldAction saveToFile(const std::list<std::string>& params);
+
 	//The console for this Slice.
 	ConsoleSlice* console;
 
@@ -54,6 +57,9 @@ private:
 
 	LazySpatialIndex<sf::Drawable*> items_sp;
 	std::list<sf::Drawable*> items; //Temp
+
+	//The name of the file which this Slice was loaded from.
+	std::string currFileName;
 
 	GameEngineControl* geControl;
 	sf::RenderWindow* window;
