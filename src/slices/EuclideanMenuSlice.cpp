@@ -252,7 +252,7 @@ void EuclideanMenuSlice::render()
 void EuclideanMenuSlice::addItem(sf::Drawable* item, const sf::FloatRect& bounds)
 {
 	//Convert to SFML
-	LazySpatialIndex<sf::Drawable*>::Rectangle boundsR(bounds.left, bounds.top, bounds.width, bounds.height);
+	geom::Rectangle boundsR(bounds.left, bounds.top, bounds.width, bounds.height);
 
 	//Add to both.
 	items.push_back(item);

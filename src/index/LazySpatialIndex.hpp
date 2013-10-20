@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "geom/Geom.hpp"
+
 
 /**
  * The purpose of this class is to allow spatial indexing on graphical objects using their
@@ -59,40 +61,6 @@ public:
 	typedef std::function<void (ItemType)> Action;
 	typedef std::function<void (const ItemType)> ConstAction;
 
-	/*class Action  {
-	public:
-		void doAction(ItemType item) = 0;
-	};*/
-
-	///Helper class: Represent a Point
-	class Point {
-	public:
-		Point(double x, double y) : x(x), y(y) {}
-
-		double x;
-		double y;
-	};
-
-	///Helper class: Represents a rectangle
-	class Rectangle {
-	public:
-		Rectangle(double x, double y, double width, double height) : x(x), y(y), width(width), height(height) {}
-
-		Point getCenter() const;
-
-		//We can have negative widths/heights
-		Point getMin() const;
-		Point getMax() const;
-
-		//For zero/negative width OR height.
-		bool isEmpty() const;
-
-		double x;
-		double y;
-		double width;
-		double height;
-	};
-
 	//Actual objects
 	AxisMap axis_x;
 	AxisMap axis_y;
@@ -107,17 +75,17 @@ public:
 	int getItemCount();
 
 	///Return the bounds of the entire set
-	Rectangle getBounds();
+	geom::Rectangle getBounds();
 
 	//Includes "estimate" factor.
-	Rectangle getBoundsExpanded();
+	geom::Rectangle getBoundsExpanded();
 
 	//Get an estimate of the health of this lookup, based on the difference between the
 	//  average width/height and the maximum. The result has an x and a y component, ranging
 	//  from 0.0 (bad) to 1.0 (good).
-	Point estimateHealth();
+	geom::Point estimateHealth();
 
-	void addItem(const ItemType& item, const Rectangle& bounds);
+	void addItem(const ItemType& item, const geom::Rectangle& bounds);
 
 
 	//BoundsHint can be null; searching is faster if it's not.
@@ -125,10 +93,10 @@ public:
 	//      using a backwards-indexed key set, and MIN (whatever) using a forwards-indexed one.
 	//NOTE: Our current approach is still valid; it's just not as fast as it could be for wide items.
 	//      And I really don't care, since the only items we regularly remove are Agents, which are small.
-	void removeItem(const ItemType& item, bool useBoundsHint=false, Rectangle boundsHint=Rectangle(0,0,0,0));
+	void removeItem(const ItemType& item, bool useBoundsHint=false, geom::Rectangle boundsHint=geom::Rectangle(0,0,0,0));
 
 	//Move = remove + add. Don't just re-add it; this will likely cause all sorts of nasty errors.
-	void moveItem(const ItemType& item, const Rectangle& newBounds, const Rectangle& oldBounds);
+	void moveItem(const ItemType& item, const geom::Rectangle& newBounds, const geom::Rectangle& oldBounds);
 
 	//In case you want all of them.
 	void forAllItems(Action toDo);
@@ -137,11 +105,11 @@ public:
 	//Perform an action on all items within a given range
 	//toDo and doOnFalsePositives can be null; the first is the action to perform on a given
 	//  match; the second is related to the "health" of the set.
-	void forAllItemsInRange(Rectangle orig_range, Action toDo, Action doOnFalsePositives);
+	void forAllItemsInRange(geom::Rectangle orig_range, Action toDo, Action doOnFalsePositives);
 
 private:
-  	void expandRectangle(Rectangle& rect, double expandBy);
-	void resizeRectangle(Rectangle& rect, double newWidth, double newHeight);
+  	void expandRectangle(geom::Rectangle& rect, double expandBy);
+	void resizeRectangle(geom::Rectangle& rect, double newWidth, double newHeight);
 
 	//Helper: get the inverse of the health
 	double getNegHealth(const std::map<double, std::vector<AxisPoint>>& axis, double max_size);
@@ -150,7 +118,7 @@ private:
 	void add_to_axis(AxisMap& axis, double key, const AxisPoint& value);
 
 	//Return the "actual" rectangle used for searching.
-	Rectangle getActualSearchRectangle(Rectangle src);
+	geom::Rectangle getActualSearchRectangle(geom::Rectangle src);
 
 	//Helper
 	//TODO: This probably needs to be modified if we want to support "point" items.
@@ -177,39 +145,7 @@ private:
 // Template method implementation (public)
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getCenter() const
-{
-	return LazySpatialIndex<ItemType>::Point(
-		x + width/2,
-		y + height/2
-	);
-}
 
-//We can have negative widths/heights
-template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getMin() const
-{
-	return LazySpatialIndex<ItemType>::Point(
-		std::min(x, x+width),
-		std::min(y, y+height)
-	);
-}
-
-template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::Rectangle::getMax() const
-{
-	return LazySpatialIndex<ItemType>::Point(
-		std::max(x, x+width),
-		std::max(y, y+height)
-	);
-}
-
-template <class ItemType>
-bool LazySpatialIndex<ItemType>::Rectangle::isEmpty() const
-{
-	return width<=0 || height<=0;
-}
 
 template <class ItemType>
 int LazySpatialIndex<ItemType>::getItemCount()
@@ -218,9 +154,9 @@ int LazySpatialIndex<ItemType>::getItemCount()
 }
 
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Rectangle LazySpatialIndex<ItemType>::getBounds()
+geom::Rectangle LazySpatialIndex<ItemType>::getBounds()
 {
-	return LazySpatialIndex<ItemType>::Rectangle(
+	return geom::Rectangle(
 		axis_x.begin()->first, axis_y.begin()->first,
 		axis_x.rbegin()->first-axis_x.begin()->first,
 		axis_y.rbegin()->first-axis_y.begin()->first
@@ -229,21 +165,21 @@ typename LazySpatialIndex<ItemType>::Rectangle LazySpatialIndex<ItemType>::getBo
 
 //Includes "estimate" factor.
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Rectangle LazySpatialIndex<ItemType>::getBoundsExpanded()
+geom::Rectangle LazySpatialIndex<ItemType>::getBoundsExpanded()
 {
-	LazySpatialIndex<ItemType>::Rectangle res = getBounds();
+	geom::Rectangle res = getBounds();
 	expandRectangle(res, 0.001);
 	return res;
 }
 
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Point LazySpatialIndex<ItemType>::estimateHealth()
+geom::Point LazySpatialIndex<ItemType>::estimateHealth()
 {
-	return LazySpatialIndex<ItemType>::Point(1.0-getNegHealth(axis_x, maxWidth), 1.0-getNegHealth(axis_y, maxHeight));
+	return geom::Point(1.0-getNegHealth(axis_x, maxWidth), 1.0-getNegHealth(axis_y, maxHeight));
 }
 
 template <class ItemType>
-void LazySpatialIndex<ItemType>::addItem(const ItemType& item, const LazySpatialIndex<ItemType>::Rectangle& bounds)
+void LazySpatialIndex<ItemType>::addItem(const ItemType& item, const geom::Rectangle& bounds)
 {
 	//TODO: What was this check for? It doesn't make sense... ~Seth
 	//if (bounds.getMin().x>0) { throw std::runtime_error("Boundary rectangle is out of bounds."); }
@@ -265,7 +201,7 @@ void LazySpatialIndex<ItemType>::addItem(const ItemType& item, const LazySpatial
 
 
 template <class ItemType>
-void LazySpatialIndex<ItemType>::removeItem(const ItemType& item, bool useBoundsHint, LazySpatialIndex<ItemType>::Rectangle boundsHint)
+void LazySpatialIndex<ItemType>::removeItem(const ItemType& item, bool useBoundsHint, geom::Rectangle boundsHint)
 {
 	//Search the whole area if no boundsHint is included.
 	if (!useBoundsHint) {
@@ -295,7 +231,7 @@ void LazySpatialIndex<ItemType>::removeItem(const ItemType& item, bool useBounds
 }
 
 template <class ItemType>
-void LazySpatialIndex<ItemType>::moveItem(const ItemType& item, const LazySpatialIndex<ItemType>::Rectangle& newBounds, const LazySpatialIndex<ItemType>::Rectangle& oldBounds)
+void LazySpatialIndex<ItemType>::moveItem(const ItemType& item, const geom::Rectangle& newBounds, const geom::Rectangle& oldBounds)
 {
 	removeItem(item, oldBounds);
 	addItem(item, newBounds);
@@ -354,18 +290,18 @@ void LazySpatialIndex<ItemType>::forAllItems(LazySpatialIndex<ItemType>::ConstAc
 
 
 template <class ItemType>
-void LazySpatialIndex<ItemType>::forAllItemsInRange(LazySpatialIndex<ItemType>::Rectangle orig_range, LazySpatialIndex<ItemType>::Action toDo, LazySpatialIndex<ItemType>::Action doOnFalsePositives)
+void LazySpatialIndex<ItemType>::forAllItemsInRange(geom::Rectangle orig_range, LazySpatialIndex<ItemType>::Action toDo, LazySpatialIndex<ItemType>::Action doOnFalsePositives)
 {
 	//Sanity check
 	if (orig_range.isEmpty()) { return; }
 
 	//Expand range slightly, just to avoid boundary issues.
-	Rectangle range = getActualSearchRectangle(orig_range);
+	geom::Rectangle range = getActualSearchRectangle(orig_range);
 
 	//Our algorithm will skip long segments entirely (unless a single start or end point is matched).
 	// There are several solutions to this, but we will simply expand the search box.
 	bool possibleFP = (range.width<maxWidth || range.height<maxHeight);
-	Rectangle match_range(range.x, range.y, range.width, range.height);
+	geom::Rectangle match_range(range.x, range.y, range.width, range.height);
 	if (possibleFP) {
 		resizeRectangle(match_range, std::max(range.width, maxWidth), std::max(range.height, maxHeight));
 	}
@@ -406,7 +342,7 @@ void LazySpatialIndex<ItemType>::forAllItemsInRange(LazySpatialIndex<ItemType>::
 					endPt = it.first;
 					startPt = endPt - ap.size;
 				}
-				match.isFalsePos = !(range.intersects(startPt, range.getCenterY(), endPt-startPt, 1));
+				match.isFalsePos = !(range.intersects(startPt, range.getCenter().y, endPt-startPt, 1));
 			}
 
 			//Matched
@@ -440,7 +376,7 @@ void LazySpatialIndex<ItemType>::forAllItemsInRange(LazySpatialIndex<ItemType>::
 					endPt = it.first;
 					startPt = endPt - ap.size;
 				}
-				match.isFalsePos = !(range.intersects(range.getCenterX(), startPt, 1, endPt-startPt));
+				match.isFalsePos = !(range.intersects(range.getCenter().x, startPt, 1, endPt-startPt));
 			}
 
 			//Fire
@@ -463,12 +399,12 @@ void LazySpatialIndex<ItemType>::forAllItemsInRange(LazySpatialIndex<ItemType>::
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Template method implementation (private)
+// Template method implementation (private). (TODO: Some of these can go into a geom::-related class)
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
 template <class ItemType>
-void LazySpatialIndex<ItemType>::expandRectangle(LazySpatialIndex<ItemType>::Rectangle& rect, double expandBy)
+void LazySpatialIndex<ItemType>::expandRectangle(geom::Rectangle& rect, double expandBy)
 {
 	resizeRectangle(rect,
 		rect.width + rect.width*expandBy,
@@ -477,10 +413,10 @@ void LazySpatialIndex<ItemType>::expandRectangle(LazySpatialIndex<ItemType>::Rec
 }
 
 template <class ItemType>
-void LazySpatialIndex<ItemType>::resizeRectangle(LazySpatialIndex<ItemType>::Rectangle& rect, double newWidth, double newHeight)
+void LazySpatialIndex<ItemType>::resizeRectangle(geom::Rectangle& rect, double newWidth, double newHeight)
 {
 	if ((rect.width==newWidth) && (rect.height==newHeight)) { return; }
-	rect = Rectangle(
+	rect = geom::Rectangle(
 			rect.getCenter().x-newWidth/2,
 			rect.getCenter().y-newHeight/2,
 			newWidth, newHeight
@@ -535,10 +471,10 @@ void LazySpatialIndex<ItemType>::add_to_axis(std::map<double, std::vector<AxisPo
 }
 
 template <class ItemType>
-typename LazySpatialIndex<ItemType>::Rectangle LazySpatialIndex<ItemType>::getActualSearchRectangle(LazySpatialIndex<ItemType>::Rectangle src)
+geom::Rectangle LazySpatialIndex<ItemType>::getActualSearchRectangle(geom::Rectangle src)
 	{
 		if (src.isEmpty()) { return src; }
-		Rectangle res = new Rectangle(src.x, src.y, src.width, src.height);
+		geom::Rectangle res = new geom::Rectangle(src.x, src.y, src.width, src.height);
 		expandRectangle(res, 0.001);
 		return res;
 	}
