@@ -9,16 +9,19 @@
 
 #include "core/GameEngine.hpp"
 #include "slices/ConsoleSlice.hpp"
+#include "widgets/AbstractGameObject.hpp"
+#include "widgets/CircleGameObject.hpp"
+#include "widgets/RectangleGameObject.hpp"
 
 
 EuclideanMenuSlice::EuclideanMenuSlice() : Slice(), window(nullptr), geControl(nullptr),
 	console(new ConsoleSlice("Add menu items with \"additem\".", {"additem", "save", "clear"}))
 {
 	//TEMP
-	sf::CircleShape* circ = new sf::CircleShape(100, 10.0);
+	CircleGameObject* circ = new CircleGameObject(100, 10.0);
 	circ->setFillColor(sf::Color::Blue);
 	circ->setPosition(100, 100);
-	addItem(circ, circ->getGlobalBounds());
+	addItem(circ, circ->getBounds());
 }
 
 void EuclideanMenuSlice::load(const std::string& file)
@@ -38,8 +41,9 @@ void EuclideanMenuSlice::save(const std::string& file)
 	//Use our comma trick to print items.
 	out <<"    {";
 	std::string comma = "";
-	items_sp.forAllItems([&out,&Q,&comma](sf::Drawable* item) {
-		out <<comma <<"\n      " <<Q <<item <<Q <<" : " <<Q <<"X" <<Q;
+	items_sp.forAllItems([&out,&Q,&comma](AbstractGameObject* item) {
+		out <<comma <<"\n      " <<Q <<item->getName() <<Q <<" : ";
+		item->save(out, 8);
 		comma = ",";
 	});
 	out <<"\n    }\n";
@@ -52,10 +56,10 @@ void EuclideanMenuSlice::save(const std::string& file)
 YieldAction EuclideanMenuSlice::addNewMenuItem(const std::list<std::string>& params)
 {
 	//TEMP
-	sf::RectangleShape* rect = new sf::RectangleShape(sf::Vector2f(150, 50));
+	RectangleGameObject* rect = new RectangleGameObject(150, 50);
 	rect->setFillColor(sf::Color::Green);
 	rect->setPosition(-600, 80);
-	addItem(rect, rect->getGlobalBounds());
+	addItem(rect, rect->getBounds());
 	resizeViews();
 
 
@@ -138,8 +142,8 @@ void EuclideanMenuSlice::resizeViews()
 	mainView.setSize(sz.x, sz.y);
 
 	//The minimap view is the size of the entire 2-D map area to render, and is centered on it. It's also off-center
-	std::pair<float, float> xRng(-500, 500); //min/max
-	std::pair<float, float> yRng(-500, 500); //min/max
+	std::pair<double, double> xRng(-500, 500); //min/max
+	std::pair<double, double> yRng(-500, 500); //min/max
 
 	//
 	// TODO: We need a spatial index to return the bounds. We *also* need to include the size of the object,
@@ -155,15 +159,13 @@ void EuclideanMenuSlice::resizeViews()
 
 	//Measure it.
 	check_all_items();
-	items_sp.forAllItems([&xRng, &yRng](sf::Drawable* item) {
+	items_sp.forAllItems([&xRng, &yRng](AbstractGameObject* item) {
 //	for (sf::Drawable* item : items) {
-		//TEMP: casting...
-		float x = ((sf::Shape*)item)->getPosition().x;
-		float y = ((sf::Shape*)item)->getPosition().y;
-		xRng.first = std::min(xRng.first, x);
-		xRng.second = std::max(xRng.second, x);
-		yRng.first = std::min(yRng.first, y);
-		yRng.second = std::max(yRng.second, y);
+		geom::Rectangle bounds = item->getBounds();
+		xRng.first = std::min(xRng.first, bounds.x);
+		xRng.second = std::max(xRng.second, bounds.x+bounds.width);
+		yRng.first = std::min(yRng.first, bounds.y);
+		yRng.second = std::max(yRng.second, bounds.y+bounds.height);
 //	}
 	});
 
@@ -226,9 +228,9 @@ void EuclideanMenuSlice::render()
 	//First, draw everything to the main view.
 	window->setView(mainView);
 	check_all_items();
-	items_sp.forAllItems([this](sf::Drawable* item) {
+	items_sp.forAllItems([this](AbstractGameObject* item) {
 	//for (sf::Drawable* item : items) {
-		window->draw(*item);
+		item->draw(*window);
 	});
 
 	//Draw a background for the minimap.
@@ -242,21 +244,18 @@ void EuclideanMenuSlice::render()
 	//Now, draw the minimap
 	window->setView(minimapView);
 	check_all_items();
-	items_sp.forAllItems([this](sf::Drawable* item) {
+	items_sp.forAllItems([this](AbstractGameObject* item) {
 	//for (sf::Drawable* item : items) {
-		window->draw(*item);
+		item->draw(*window);
 	});
 }
 
 
-void EuclideanMenuSlice::addItem(sf::Drawable* item, const sf::FloatRect& bounds)
+void EuclideanMenuSlice::addItem(AbstractGameObject* item, const geom::Rectangle& bounds)
 {
-	//Convert to SFML
-	geom::Rectangle boundsR(bounds.left, bounds.top, bounds.width, bounds.height);
-
 	//Add to both.
 	items.push_back(item);
-	items_sp.addItem(item, boundsR);
+	items_sp.addItem(item, bounds);
 }
 
 bool EuclideanMenuSlice::isItemsEmpty() const
@@ -270,10 +269,10 @@ bool EuclideanMenuSlice::isItemsEmpty() const
 	return items_sp.totalItems==0;
 }
 
-const sf::Drawable* EuclideanMenuSlice::get_first_item() const {
-	const sf::Drawable* it1 = items.front();
-	const sf::Drawable* it2 = nullptr;
-	items_sp.forAllItems([it1, &it2](const sf::Drawable* item) {
+const AbstractGameObject* EuclideanMenuSlice::get_first_item() const {
+	const AbstractGameObject* it1 = items.front();
+	const AbstractGameObject* it2 = nullptr;
+	items_sp.forAllItems([it1, &it2](const AbstractGameObject* item) {
 		if (item==it1) { it2=it1; return; }
 	});
 	if (it2) {
@@ -283,13 +282,13 @@ const sf::Drawable* EuclideanMenuSlice::get_first_item() const {
 }
 
 void EuclideanMenuSlice::check_all_items() const {
-	std::set<const sf::Drawable*> items1;
-	for (sf::Drawable* item : items) {
+	std::set<const AbstractGameObject*> items1;
+	for (AbstractGameObject* item : items) {
 		items1.insert(item);
 	}
 
-	std::set<const sf::Drawable*> items2;
-	items_sp.forAllItems([&items2](sf::Drawable* item) {
+	std::set<const AbstractGameObject*> items2;
+	items_sp.forAllItems([&items2](AbstractGameObject* item) {
 		items2.insert(item);
 	});
 

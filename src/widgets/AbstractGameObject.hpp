@@ -17,10 +17,21 @@
  */
 class AbstractGameObject {
 public:
-	AbstractGameObject(const std::string& name="");
+	AbstractGameObject(const std::string& name="") : name(name)
+	{}
+	virtual ~AbstractGameObject()
+	{}
 
-	std::string getName() const = 0;
-	void save(std::ofstream& file, int tabLevel) const = 0;
-	geom::Rectangle getBounds() const = 0;
+	virtual void save(std::ofstream& file, int tabLevel) const = 0;
+	virtual geom::Rectangle getBounds() const = 0;
+
+	virtual void draw(sf::RenderWindow& window) const = 0;
+
+	std::string getName() const {
+		return name;
+	}
+
+private:
+	std::string name;
 };
 

@@ -10,6 +10,7 @@
 #include "index/LazySpatialIndex.hpp"
 
 class ConsoleSlice;
+class AbstractGameObject;
 
 /**
  * A "menu" slice with various objects arranged in 2-D space and a "character" who walks around and
@@ -34,9 +35,9 @@ public:
 
 private:
 	//Helper: keep our two spatial indexes in sync. "Checks" will fail if they are not true for both.
-	void addItem(sf::Drawable* item, const sf::FloatRect& bounds);
+	void addItem(AbstractGameObject* item, const geom::Rectangle& bounds);
 	bool isItemsEmpty() const;
-	const sf::Drawable* get_first_item() const;
+	const AbstractGameObject* get_first_item() const;
 	void check_all_items() const;
 
 	void resizeViews();
@@ -55,8 +56,8 @@ private:
 
 	YieldAction processKeyPress(const sf::Event::KeyEvent& key);
 
-	LazySpatialIndex<sf::Drawable*> items_sp;
-	std::list<sf::Drawable*> items; //Temp
+	LazySpatialIndex<AbstractGameObject*> items_sp;
+	std::list<AbstractGameObject*> items; //Temp
 
 	//The name of the file which this Slice was loaded from.
 	std::string currFileName;
