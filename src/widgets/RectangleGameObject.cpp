@@ -23,15 +23,15 @@ void RectangleGameObject::save(std::ofstream& file, int tabLevel) const
 	file <<Q <<"g" <<Q <<" : " <<static_cast<unsigned int>(color.g) <<",";
 	file <<Q <<"b" <<Q <<" : " <<static_cast<unsigned int>(color.b) <<",";
 	file <<Q <<"a" <<Q <<" : " <<static_cast<unsigned int>(color.a);
-	file <<"]" <<"\n";
-	file <<tab <<"},\n";
+	file <<"},\n";
 
 	sf::Vector2f pos = this->getPosition();
 	file <<tab <<"  " <<Q <<"xpos" <<Q <<" : " <<pos.x <<",\n";
 	file <<tab <<"  " <<Q <<"ypos" <<Q <<" : " <<pos.y <<",\n";
 
 	//Name is always last.
-	file <<tab <<"  " <<Q <<"name" <<Q <<" : " <<this->getName() <<"\n";
+	file <<tab <<"  " <<Q <<"name" <<Q <<" : " <<Q <<this->getName() <<Q <<"\n";
+	file <<tab <<"}";
 }
 
 

@@ -39,14 +39,14 @@ void EuclideanMenuSlice::save(const std::string& file)
 	out <<"  " <<Q <<"shapes" <<Q <<" : " <<"\n";
 
 	//Use our comma trick to print items.
-	out <<"    {";
+	out <<"    [";
 	std::string comma = "";
 	items_sp.forAllItems([&out,&Q,&comma](AbstractGameObject* item) {
-		out <<comma <<"\n      " <<Q <<item->getName() <<Q <<" : ";
-		item->save(out, 8);
+		out <<comma <<"\n";
+		item->save(out, 6);
 		comma = ",";
 	});
-	out <<"\n    }\n";
+	out <<"\n    ]\n";
 
 	//Done
 	out <<"}\n";
