@@ -35,7 +35,7 @@ void EuclideanMenuSlice::save(const std::string& file)
 
 	std::ofstream out(file);
 	out <<"{\n";
-	out <<"  " <<Q <<"filename" <<Q <<" : " <<Q <<file <<Q <<"\n";
+	out <<"  " <<Q <<"filename" <<Q <<" : " <<Q <<file <<Q <<",\n";
 	out <<"  " <<Q <<"shapes" <<Q <<" : " <<"\n";
 
 	//Use our comma trick to print items.
