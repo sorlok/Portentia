@@ -73,6 +73,11 @@ find_package(Lua REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})
 LIST(APPEND LibraryList ${LUA_LIBRARIES})
 
+#Find LuaBind
+find_package(Luabind REQUIRED)
+include_directories(${LUABIND_INCLUDE_DIRS})
+LIST(APPEND LibraryList ${LUABIND_LIBRARIES})
+
 #Our source files.
 FILE(GLOB_RECURSE OurSrcFiles "src/*.c" "src/*.cpp")
 

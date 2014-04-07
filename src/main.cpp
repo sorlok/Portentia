@@ -9,44 +9,16 @@
 
 extern "C" {
 	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
 }
 
+#include <luabind/luabind.hpp>
 
 #include "widgets/FpsCounter.hpp"
 #include "core/GameEngine.hpp"
 
-//Called from Lua
-int get_num_args(lua_State *L)
+int get_num_args(int n1, int n2, int n3, int n4)
 {
-	//Get the number of arguments
-	int n = lua_gettop(L); //Should be zero in this case.
-
-	//Push our result.
-	lua_pushnumber(L, n);
-
-	//Only 1 result this time.
-	return 1;
-}
-
-int call_func(lua_State* L, int x, int y)
-{
-	//func_name
-	lua_getglobal(L, "generous_add");
-
-	//args
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-
-	//Call it.
-	lua_call(L, 2, 1);
-
-	//Retrieve the result.
-	int sum = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-
-	return sum;
+	return n4;
 }
 
 
@@ -58,11 +30,14 @@ int main( int argc, const char* argv[] )
 	//Initialize Lua
 	L = luaL_newstate();
 
-	//Load base libraries.
-	luaL_openlibs(L);
+	//Connect luabind to our lua state.
+	luabind::open(L);
 
 	//Register our function!
-	lua_register(L, "get_num_args", get_num_args);
+	//lua_register(L, "get_num_args", get_num_args);
+	luabind::module(L, "game") [
+		luabind::def("get_num_args", get_num_args)
+	];
 
 	//Load the script.
 	if (luaL_dofile(L, "script/hello.lua") != 0) {
@@ -71,8 +46,13 @@ int main( int argc, const char* argv[] )
 	}
 
 	//Call the function.
-	int res = call_func(L, 3,7);
+	//int res = call_func(L, 3,7);
+	int res = luabind::call_function<int>(L, "generous_add", 3, 7);
 	std::cout <<"TEST: " <<res <<"\n";
+
+	//Close the Lua state.
+	lua_close(L);
+
 
 	//A GameEngine encapsulates our sfml calls.
 	GameEngine engine;

@@ -1,3 +1,3 @@
 function generous_add ( x, y )
-	return x + y + get_num_args(1,2,3,4,5)
+	return x + y + game.get_num_args(1,2,3,5)
 end
