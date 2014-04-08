@@ -1,0 +1,16 @@
+{
+  "filename" : "map_tavern.json",
+  
+  "background" : "0x336699",
+  
+  "tiles" : {
+    "tavern" : "tavern.png"
+  },
+  
+  "tmap" : [
+    {"tile":"tavern", "x":100, "y":200}
+  ],
+  
+  //Performed on every time_tick.
+  "onupdate" : "print(game.get_num_args(10,9,8,42))"
+}

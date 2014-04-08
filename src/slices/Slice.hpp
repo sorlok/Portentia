@@ -35,7 +35,7 @@ public:
 	virtual ~Slice() {}
 
 	///Is called when a view is activated (either it becomes active for the first time, or it
-	/// is re-activated by canceling out of a sub-view). Views are gerroruaranteed to have this
+	/// is re-activated by canceling out of a sub-view). Views are guaranteed to have this
 	/// function called before any events are sent its way, so it can be used to initialize resources.
 	///The RenderWindow passed in here is guaranteed to be valid until another call to activated (so save it!).
 	///The prevSlice, if non-null, contains the Slice which was active and which gave control to this slice.
@@ -45,6 +45,9 @@ public:
 
 	///Process a pending event.
 	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
+
+	///General update (called after all events).
+	virtual void update(const sf::Time& elapsed) = 0;
 
 	///Render.
 	///NOTE: Do NOT call window.display()

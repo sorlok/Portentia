@@ -20,16 +20,17 @@ class AbstractGameObject;
 class EuclideanMenuSlice : public Slice {
 public:
 	EuclideanMenuSlice();
+	virtual ~EuclideanMenuSlice() {}
 
 	void load(const std::string& file);
 
 	void save(const std::string& file);
 
-	virtual ~EuclideanMenuSlice() {}
-
 	virtual YieldAction activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
 
 	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
+
+	virtual void update(const sf::Time& elapsed);
 
 	virtual void render();
 

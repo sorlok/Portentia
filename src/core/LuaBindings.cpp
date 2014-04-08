@@ -1,5 +1,9 @@
 #include "LuaBindings.hpp"
 
+extern "C" {
+	#include <lualib.h>
+}
+
 #include <luabind/luabind.hpp>
 
 //From main.cpp
@@ -10,6 +14,9 @@ lua_State* NewLuaState()
 {
 	//Lua state.
 	lua_State* L = luaL_newstate();
+
+	//Bind normal Lua API calls.
+	luaL_openlibs(L);
 
 	//Connect luabind to our lua state.
 	luabind::open(L);

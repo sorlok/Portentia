@@ -16,13 +16,15 @@
  */
 class ConsoleSlice : public Slice {
 public:
-	ConsoleSlice(const std::string& text, const std::list<std::string>& commands);
+	ConsoleSlice(const std::string& text, const std::list<std::string>& commands={});
 
 	virtual ~ConsoleSlice() {}
 
 	virtual YieldAction activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
 
 	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
+
+	virtual void update(const sf::Time& elapsed);
 
 	virtual void render();
 

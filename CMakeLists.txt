@@ -68,6 +68,11 @@ find_package(SFML REQUIRED)
 include_directories(${SFML_INCLUDE_DIR})
 LIST(APPEND LibraryList ${SFML_LIBRARY})
 
+#Find JsonCpp
+find_package(JsonCpp REQUIRED)
+include_directories(${JSONCPP_INCLUDE_DIR})
+LIST(APPEND LibraryList ${JSONCPP_LIBRARIES})
+
 #Find Lua
 find_package(Lua REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})

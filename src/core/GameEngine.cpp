@@ -9,12 +9,12 @@
 #include "core/LuaBindings.hpp"
 #include "platform/Fonts.hpp"
 #include "slices/Slice.hpp"
-#include "slices/EuclideanMenuSlice.hpp"
+#include "slices/TileMapSlice.hpp"
 
 
 //Temp: We don't perform memory management of slices.
 namespace {
-EuclideanMenuSlice FirstSlice;
+TileMapSlice FirstSlice;
 } //End un-named namespace.
 
 
@@ -114,6 +114,7 @@ void GameEngine::createGameWindow(const sf::VideoMode& wndSize, const std::strin
     }
 
     //TEMP
+    FirstSlice.load("res/map_tavern.json");
     setSlice(&FirstSlice);
 }
 
@@ -144,6 +145,11 @@ void GameEngine::runGameLoop()
 
     	//Process all events.
     	processEvents(elapsed);
+
+    	//Update the current slice.
+    	if (!slices.empty()) {
+    		slices.back()->update(elapsed);
+    	}
 
     	//Paint everything
     	repaintGame();

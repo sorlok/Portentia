@@ -28,6 +28,9 @@ public:
 
 	///Get the default monospace font.
 	virtual const sf::Font& getMonoFont() const = 0;
+
+	///Retrieve the Lua state.
+	virtual lua_State* lua() = 0;
 };
 
 
@@ -56,7 +59,7 @@ public:
 	virtual const sf::Font& getMonoFont() const;
 
 	///Get the current Lua state.
-	lua_State* lua();
+	virtual lua_State* lua();
 
 private:
 	//Portions of the game update loop

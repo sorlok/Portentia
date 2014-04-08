@@ -184,6 +184,11 @@ void EuclideanMenuSlice::resizeViews()
 	minimapView.setViewport(sf::FloatRect(0.79, 0.01, 0.2, 0.2));
 }
 
+void EuclideanMenuSlice::update(const sf::Time& elapsed)
+{
+
+}
+
 YieldAction EuclideanMenuSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
 	YieldAction res;

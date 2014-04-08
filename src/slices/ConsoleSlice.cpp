@@ -233,6 +233,14 @@ YieldAction ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& e
 	return YieldAction();
 }
 
+
+void ConsoleSlice::update(const sf::Time& elapsed)
+{
+
+}
+
+
+
 void ConsoleSlice::render()
 {
 	//Nothing to draw.
