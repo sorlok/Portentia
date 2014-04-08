@@ -4,6 +4,9 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <luabind/luabind.hpp>
+
+#include "core/LuaBindings.hpp"
 #include "platform/Fonts.hpp"
 #include "slices/Slice.hpp"
 #include "slices/EuclideanMenuSlice.hpp"
@@ -32,11 +35,35 @@ GameEngine::GameEngine() : fps(100)
 		throw std::runtime_error("Can't find a suitable font; exiting.");
     }
 
+	//Initialize and bind the Lua state.
+	L = NewLuaState();
+
 	//Initialize our fps counter.
     fps.setColor(sf::Color::Red);
     fps.setPosition(10, 10);
     fps.setCharacterSize(20);
     fps.setFont(getMonoFont());
+
+
+
+    //TEST:
+	//Load the script.
+	if (luaL_dofile(L, "script/hello.lua") != 0) {
+		throw std::runtime_error("Error loading Lua script.");
+	}
+
+	//TEST:
+	//Call the function.
+	int res = luabind::call_function<int>(L, "generous_add", 3, 7);
+	std::cout <<"TEST: " <<res <<"\n";
+}
+
+GameEngine::~GameEngine()
+{
+	//Close the Lua state.
+	if (L) {
+		lua_close(L);
+	}
 }
 
 
@@ -168,6 +195,12 @@ void GameEngine::repaintGame() const
 
 	//Draw
 	window.display();
+}
+
+
+lua_State* GameEngine::lua()
+{
+	return L;
 }
 
 

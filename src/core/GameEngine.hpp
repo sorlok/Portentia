@@ -4,6 +4,10 @@
 #include <string>
 #include <list>
 
+extern "C" {
+	#include "lua.h"
+}
+
 #include "widgets/FpsCounter.hpp"
 
 //Forward declarations
@@ -33,7 +37,7 @@ public:
 class GameEngine : public GameEngineControl {
 public:
 	GameEngine();
-	virtual ~GameEngine() {}
+	virtual ~GameEngine();
 
 	///How to position the window.
 	enum class Position {Default, Center};
@@ -51,6 +55,9 @@ public:
 	///Get the default monospace font.
 	virtual const sf::Font& getMonoFont() const;
 
+	///Get the current Lua state.
+	lua_State* lua();
+
 private:
 	//Portions of the game update loop
 	void processEvents(const sf::Time& elapsed);
@@ -64,6 +71,9 @@ private:
 
 	sf::Font monoFont;
 	FpsCounter fps;
+
+	//Every engine maintains the current Lua state.
+	lua_State* L;
 
 	std::list<Slice*> slices; //The back-most one handles events, but all of them render.
 };
