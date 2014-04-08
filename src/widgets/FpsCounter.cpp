@@ -12,10 +12,10 @@ FpsCounter::FpsCounter(int numMeasurements) : maxMeasurements(numMeasurements), 
 void FpsCounter::update(const sf::Time& elapsed)
 {
 	//First frame tick.
-	if (elapsed.asMilliseconds()==0) { return; }
+	if (elapsed.asSeconds()==0) { return; }
 
 	//Account for this
-	double currMeasure = 1000.0/elapsed.asMilliseconds();
+	double currMeasure = 1.0/elapsed.asSeconds();
 	runningTotal += currMeasure/maxMeasurements;
 	measurements.push_back(currMeasure);
 
