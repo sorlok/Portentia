@@ -15,6 +15,7 @@ public:
 	void update(const sf::Time& elapsed);
 
 private:
+	double delay;
 	int maxMeasurements;
 	std::list<double> measurements;
 	double runningTotal;
