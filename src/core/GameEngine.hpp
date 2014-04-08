@@ -55,6 +55,8 @@ public:
 
 	void runGameLoop();
 
+	float getElapsedMs() const;
+
 	///Get the default monospace font.
 	virtual const sf::Font& getMonoFont() const;
 
@@ -71,6 +73,9 @@ private:
 	bool remSlice(); //Remove. Does *not* free the associated memory.
 
 	mutable sf::RenderWindow window;
+
+	//Elapsed time for this update tick.
+	sf::Time elapsed;
 
 	sf::Font monoFont;
 	FpsCounter fps;

@@ -18,44 +18,8 @@ TileMapSlice FirstSlice;
 } //End un-named namespace.
 
 
-GameEngine::GameEngine() : fps(100)
+GameEngine::GameEngine() : fps(100), L(nullptr)
 {
-	//Load a default "mono" font, for helpful debugging.
-	bool foundFont = false;
-	std::vector<std::string> sampleFonts = {"scp.otf", platform::GuessMonoFont()};
-	for (std::string font : sampleFonts) {
-		if (monoFont.loadFromFile(font)) {
-			foundFont = true;
-			break;
-		}
-	}
-
-	//Nothing?
-	if (!foundFont) {
-		throw std::runtime_error("Can't find a suitable font; exiting.");
-    }
-
-	//Initialize and bind the Lua state.
-	L = NewLuaState();
-
-	//Initialize our fps counter.
-    fps.setColor(sf::Color::Red);
-    fps.setPosition(10, 10);
-    fps.setCharacterSize(20);
-    fps.setFont(getMonoFont());
-
-
-
-    //TEST:
-	//Load the script.
-	if (luaL_dofile(L, "script/hello.lua") != 0) {
-		throw std::runtime_error("Error loading Lua script.");
-	}
-
-	//TEST:
-	//Call the function.
-	int res = luabind::call_function<int>(L, "generous_add", 3, 7);
-	std::cout <<"TEST: " <<res <<"\n";
 }
 
 GameEngine::~GameEngine()
@@ -100,6 +64,30 @@ bool GameEngine::remSlice() {
 
 void GameEngine::createGameWindow(const sf::VideoMode& wndSize, const std::string& title, Position wndPos)
 {
+	//Load a default "mono" font, for helpful debugging.
+	bool foundFont = false;
+	std::vector<std::string> sampleFonts = {"scp.otf", platform::GuessMonoFont()};
+	for (std::string font : sampleFonts) {
+		if (monoFont.loadFromFile(font)) {
+			foundFont = true;
+			break;
+		}
+	}
+
+	//Nothing?
+	if (!foundFont) {
+		throw std::runtime_error("Can't find a suitable font; exiting.");
+    }
+
+	//Initialize and bind the Lua state.
+	L = NewLuaState();
+
+	//Initialize our fps counter.
+    fps.setColor(sf::Color::Red);
+    fps.setPosition(10, 10);
+    fps.setCharacterSize(20);
+    fps.setFont(getMonoFont());
+
 	//Calculate the center position first, since getDesktopMode() seems to delay window movement otherwise.
 	sf::VideoMode deskMode = sf::VideoMode::getDesktopMode();
 	sf::Vector2i centerPos = {
@@ -141,7 +129,7 @@ void GameEngine::runGameLoop()
     sf::Clock clock;
     while (window.isOpen()) {
     	//Time elapsed
-    	sf::Time elapsed = clock.restart();
+    	elapsed = clock.restart();
 
     	//Process all events.
     	processEvents(elapsed);
@@ -207,6 +195,12 @@ void GameEngine::repaintGame() const
 lua_State* GameEngine::lua()
 {
 	return L;
+}
+
+
+float GameEngine::getElapsedMs() const
+{
+	return elapsed.asSeconds();
 }
 
 

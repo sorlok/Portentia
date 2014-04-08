@@ -12,5 +12,5 @@
   ],
   
   //Performed on every time_tick.
-  "onupdate" : "print(game.get_num_args(10,9,8,42))"
+  "onupdate" : "print(game.engine():elapsed()*1000 , 'ms')"
 }
