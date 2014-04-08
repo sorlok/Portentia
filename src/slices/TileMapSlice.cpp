@@ -86,6 +86,7 @@ void TileMapSlice::load(const std::string& file)
 			if (item.isMember("tile") && item.isMember("x") && item.isMember("y")) {
 				sf::Sprite res(*tiles[item["tile"].asString()]);
 				res.setPosition(item["x"].asInt(), item["y"].asInt());
+				tmap.push_back(res);
 			}
 		}
 	}
@@ -169,4 +170,9 @@ void TileMapSlice::render()
 
 	//Color the background.
 	window->clear(bkgrdColor);
+
+	//Color all entries in the tile map.
+	for (auto& item : tmap) {
+		window->draw(item);
+	}
 }
