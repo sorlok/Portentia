@@ -32,6 +32,9 @@ public:
 
 	virtual void render();
 
+	//Temporary, for testing Lua.
+	void changeBgColor(long elapsedMs);
+
 private:
 	//The console for this Slice.
 	ConsoleSlice* console;

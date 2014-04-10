@@ -101,6 +101,9 @@ void GameEngine::createGameWindow(const sf::VideoMode& wndSize, const std::strin
     	window.setPosition(centerPos);
     }
 
+    //vsync
+    window.setVerticalSyncEnabled(true);
+
     //TEMP
     FirstSlice.load("res/map_tavern.json");
     setSlice(&FirstSlice);
@@ -130,6 +133,7 @@ void GameEngine::runGameLoop()
     while (window.isOpen()) {
     	//Time elapsed
     	elapsed = clock.restart();
+    	luabind::globals(L)["elapsed"] = elapsed.asMilliseconds();
 
     	//Process all events.
     	processEvents(elapsed);

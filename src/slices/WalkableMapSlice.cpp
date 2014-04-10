@@ -11,6 +11,7 @@
 extern "C" {
 	#include "lauxlib.h"
 }
+#include <luabind/luabind.hpp>
 
 #include <jsoncpp/json/json.h>
 
@@ -121,6 +122,7 @@ YieldAction WalkableMapSlice::activated(GameEngineControl& geControl, Slice* pre
 void WalkableMapSlice::update(const sf::Time& elapsed)
 {
 	if (!onupdate.empty()) {
+		luabind::globals(geControl->lua())["this"] = this;
 		if (luaL_dostring(geControl->lua(), onupdate.c_str())!=0) {
 			std::cout <<"Error running onupdate lua code: ##{" <<onupdate <<"}##\n";
 			std::cout <<"Error is: \"" <<lua_tostring(geControl->lua(), -1) <<"\"\n";
@@ -176,3 +178,10 @@ void WalkableMapSlice::render()
 		window->draw(item);
 	}
 }
+
+void WalkableMapSlice::changeBgColor(long elapsedMs)
+{
+	//Just make it redder.
+	bkgrdColor = sf::Color(bkgrdColor.r+1, bkgrdColor.g, bkgrdColor.b);
+}
+

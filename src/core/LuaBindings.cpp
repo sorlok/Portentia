@@ -1,5 +1,7 @@
 #include "LuaBindings.hpp"
-#include "GameEngine.hpp"
+
+#include "core/GameEngine.hpp"
+#include "slices/WalkableMapSlice.hpp"
 
 extern "C" {
 	#include <lualib.h>
@@ -34,7 +36,10 @@ lua_State* NewLuaState()
 
 			//Register our classes.
 			class_<GameEngine>("GameEngine")
-				.def("elapsed", &GameEngine::getElapsedMs)
+				.def("elapsed", &GameEngine::getElapsedMs),
+
+			class_<WalkableMapSlice>("WalkableMapSlice")
+				.def("modify", &WalkableMapSlice::changeBgColor)
 		]
 	];
 

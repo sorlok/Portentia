@@ -12,5 +12,5 @@
   ],
   
   //Performed on every time_tick.
-  "onupdate" : "print(game.engine():elapsed()*1000 , 'ms')"
+  "onupdate" : "this:modify(elapsed) ; print(elapsed)"
 }
