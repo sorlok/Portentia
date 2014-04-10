@@ -9,12 +9,12 @@
 #include "core/LuaBindings.hpp"
 #include "platform/Fonts.hpp"
 #include "slices/Slice.hpp"
-#include "slices/TileMapSlice.hpp"
+#include "slices/WalkableMapSlice.hpp"
 
 
 //Temp: We don't perform memory management of slices.
 namespace {
-TileMapSlice FirstSlice;
+WalkableMapSlice FirstSlice;
 } //End un-named namespace.
 
 

@@ -1,4 +1,4 @@
-#include "TileMapSlice.hpp"
+#include "WalkableMapSlice.hpp"
 
 #include <set>
 #include <algorithm>
@@ -21,12 +21,12 @@ extern "C" {
 #include "widgets/RectangleGameObject.hpp"
 
 
-TileMapSlice::TileMapSlice() : Slice(), window(nullptr), geControl(nullptr),
+WalkableMapSlice::WalkableMapSlice() : Slice(), window(nullptr), geControl(nullptr),
 	console(new ConsoleSlice("TODO: lua console.")), bkgrdColor(0xC0, 0xC0, 0x00)
 {
 }
 
-void TileMapSlice::load(const std::string& file)
+void WalkableMapSlice::load(const std::string& file)
 {
 	//Get the path.
 	std::string path = "./";
@@ -98,7 +98,7 @@ void TileMapSlice::load(const std::string& file)
 	}
 }
 
-void TileMapSlice::save(const std::string& file)
+void WalkableMapSlice::save(const std::string& file)
 {
 	//TODO: populate, save.
 	Json::Value root;
@@ -107,7 +107,7 @@ void TileMapSlice::save(const std::string& file)
 
 
 
-YieldAction TileMapSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
+YieldAction WalkableMapSlice::activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window)
 {
 	//Save
 	this->window = &window;
@@ -118,7 +118,7 @@ YieldAction TileMapSlice::activated(GameEngineControl& geControl, Slice* prevSli
 }
 
 
-void TileMapSlice::update(const sf::Time& elapsed)
+void WalkableMapSlice::update(const sf::Time& elapsed)
 {
 	if (!onupdate.empty()) {
 		if (luaL_dostring(geControl->lua(), onupdate.c_str())!=0) {
@@ -129,7 +129,7 @@ void TileMapSlice::update(const sf::Time& elapsed)
 }
 
 
-YieldAction TileMapSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
+YieldAction WalkableMapSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
 {
 	YieldAction res;
 	switch (event.type) {
@@ -144,7 +144,7 @@ YieldAction TileMapSlice::processEvent(const sf::Event& event, const sf::Time& e
 	return res;
 }
 
-YieldAction TileMapSlice::processKeyPress(const sf::Event::KeyEvent& key, const sf::Time& elapsed)
+YieldAction WalkableMapSlice::processKeyPress(const sf::Event::KeyEvent& key, const sf::Time& elapsed)
 {
 	//Failsafe
 	if (!geControl) { throw std::runtime_error("Can't process events without a GameEngineControl"); }
@@ -163,7 +163,7 @@ YieldAction TileMapSlice::processKeyPress(const sf::Event::KeyEvent& key, const 
 	return YieldAction();
 }
 
-void TileMapSlice::render()
+void WalkableMapSlice::render()
 {
 	//Nothing to draw.
 	if (!window) { return; }

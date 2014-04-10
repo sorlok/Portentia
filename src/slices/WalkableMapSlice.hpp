@@ -13,12 +13,12 @@ class ConsoleSlice;
 class AbstractGameObject;
 
 /**
- * A "map" that supports tiles and other objects in a variety of formats.
+ * A "map" that supports a hero walking around.
  */
-class TileMapSlice : public Slice {
+class WalkableMapSlice : public Slice {
 public:
-	TileMapSlice();
-	virtual ~TileMapSlice() {}
+	WalkableMapSlice();
+	virtual ~WalkableMapSlice() {}
 
 	void load(const std::string& file);
 
