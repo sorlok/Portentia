@@ -22,9 +22,9 @@ public:
 
 	virtual YieldAction activated(GameEngineControl& geControl, Slice* prevSlice, sf::RenderWindow& window);
 
-	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
+	//virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed);
 
-	virtual void update(const sf::Time& elapsed);
+	virtual void update(const sf::Time& elapsed, const std::vector<sf::Event::KeyEvent>& typed);
 
 	virtual void render();
 

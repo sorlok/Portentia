@@ -12,5 +12,5 @@
   ],
   
   //Performed on every time_tick.
-  "onupdate" : "this:modify(elapsed) ; print(elapsed)"
+  "onupdate" : "this:modify(elapsed)"
 }

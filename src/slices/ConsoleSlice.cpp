@@ -188,55 +188,46 @@ bool ConsoleSlice::processCurrCommand()
 }
 
 
-YieldAction ConsoleSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
+void ConsoleSlice::update(const sf::Time& elapsed, const std::vector<sf::Event::KeyEvent>& typed)
 {
-	switch (event.type) {
-		case sf::Event::KeyPressed:
-			if (event.key.code==sf::Keyboard::Return) {
-				if (NoModifiers(event.key)) {
-					bool keep = processCurrCommand();
-					if (!keep) {
-						return YieldAction(YieldAction::Remove);
-					}
-				}
-			} else if (event.key.code==sf::Keyboard::Tab) {
-				if (NoModifiers(event.key)) {
-					matchCommands();
-				}
-			} else if (event.key.code==sf::Keyboard::Escape) {
-				if (NoModifiers(event.key)) {
-					return YieldAction(YieldAction::Remove);
-				}
-			} else if (event.key.code==sf::Keyboard::BackSpace) {
-				if (NoModifiers(event.key)) {
-					if (!currLine.str().empty()) {
-						std::string prev = currLine.str();
-						prev = prev.substr(0, prev.length()-1);
-						currLine.str("");
-						currLine <<prev;
-					}
-				}
-			}
-			refreshText();
-			break;
-		case sf::Event::TextEntered:
-			if (std::isprint(event.text.unicode)) {
-				currLine <<std::string(1, event.text.unicode);
-			}
-			refreshText();
-			break;
+	//TODO: Need a way to handle these events seamlessly; TextEntered handles *actual* typing by the user.
+	/*case sf::Event::TextEntered:
+		if (std::isprint(event.text.unicode)) {
+			currLine <<std::string(1, event.text.unicode);
+		}
+		refreshText();
+		break;*/
 
-		//Else, don't handle.
-		default: break;
+
+	//TODO: A lot of this logic doesn't really work any more; the Console is useful, but it will likely just be a Lua terminal.
+	for (const auto& key : typed) {
+		if (key.code==sf::Keyboard::Return) {
+			if (NoModifiers(key)) {
+				bool keep = processCurrCommand();
+				if (!keep) {
+					return; //YieldAction(YieldAction::Remove);
+				}
+			}
+		} else if (key.code==sf::Keyboard::Tab) {
+			if (NoModifiers(key)) {
+				matchCommands();
+			}
+		} else if (key.code==sf::Keyboard::Escape) {
+			if (NoModifiers(key)) {
+				return; //YieldAction(YieldAction::Remove);
+			}
+		} else if (key.code==sf::Keyboard::BackSpace) {
+			if (NoModifiers(key)) {
+				if (!currLine.str().empty()) {
+					std::string prev = currLine.str();
+					prev = prev.substr(0, prev.length()-1);
+					currLine.str("");
+					currLine <<prev;
+				}
+			}
+		}
+		refreshText();
 	}
-
-	return YieldAction();
-}
-
-
-void ConsoleSlice::update(const sf::Time& elapsed)
-{
-
 }
 
 

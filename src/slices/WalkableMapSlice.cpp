@@ -119,8 +119,20 @@ YieldAction WalkableMapSlice::activated(GameEngineControl& geControl, Slice* pre
 }
 
 
-void WalkableMapSlice::update(const sf::Time& elapsed)
+void WalkableMapSlice::update(const sf::Time& elapsed, const std::vector<sf::Event::KeyEvent>& typed)
 {
+	//Sprite movement.
+	std::pair<int,int> walk = std::make_pair(0,0);
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) { walk.second--; }
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) { walk.second++; }
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) { walk.first--; }
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) { walk.first++; }
+
+	//TODO: Actually walk.
+
+	//TODO: Process onupdate for all Sprites.
+
+	//Process onupdate for this map.
 	if (!onupdate.empty()) {
 		luabind::globals(geControl->lua())["this"] = this;
 		if (luaL_dostring(geControl->lua(), onupdate.c_str())!=0) {
@@ -130,40 +142,6 @@ void WalkableMapSlice::update(const sf::Time& elapsed)
 	}
 }
 
-
-YieldAction WalkableMapSlice::processEvent(const sf::Event& event, const sf::Time& elapsed)
-{
-	YieldAction res;
-	switch (event.type) {
-		case sf::Event::KeyPressed:
-			res = processKeyPress(event.key, elapsed);
-			break;
-
-		//Else, don't handle
-		default: break;
-	}
-
-	return res;
-}
-
-YieldAction WalkableMapSlice::processKeyPress(const sf::Event::KeyEvent& key, const sf::Time& elapsed)
-{
-	//Failsafe
-	if (!geControl) { throw std::runtime_error("Can't process events without a GameEngineControl"); }
-
-	switch (key.code) {
-		case sf::Keyboard::Up:
-			if (NoModifiers(key)) {
-				//TODO: Walk.
-			}
-			break;
-
-		//Else, don't handle
-		default: break;
-	}
-
-	return YieldAction();
-}
 
 void WalkableMapSlice::render()
 {

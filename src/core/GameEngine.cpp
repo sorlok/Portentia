@@ -136,11 +136,12 @@ void GameEngine::runGameLoop()
     	luabind::globals(L)["elapsed"] = elapsed.asMilliseconds();
 
     	//Process all events.
-    	processEvents(elapsed);
+    	std::vector<sf::Event::KeyEvent> typed;
+    	processEvents(typed);
 
     	//Update the current slice.
     	if (!slices.empty()) {
-    		slices.back()->update(elapsed);
+    		slices.back()->update(elapsed, typed);
     	}
 
     	//Paint everything
@@ -149,7 +150,7 @@ void GameEngine::runGameLoop()
 }
 
 
-void GameEngine::processEvents(const sf::Time& elapsed)
+void GameEngine::processEvents(std::vector<sf::Event::KeyEvent>& typed)
 {
 	//Update the FPS counter.
 	fps.update(elapsed);
@@ -157,23 +158,18 @@ void GameEngine::processEvents(const sf::Time& elapsed)
 	//Update based on events.
 	sf::Event event;
 	while (window.pollEvent(event)) {
-		if (event.type == sf::Event::Closed) {
-			window.close();
-		} else {
-			YieldAction res;
-			Slice* currSlice = slices.empty() ? nullptr : slices.back();
+		switch (event.type) {
+			case sf::Event::Closed:
+				window.close();
+				break;
 
-			//Ask the slice to handle this event.
-			if (currSlice) {
-				res = currSlice->processEvent(event, elapsed);
-			}
+			case sf::Event::KeyPressed:
+				//Accumulate key presses.
+				typed.push_back(event.key);
+				break;
 
-			//The slice may have Yielded
-			while (res.action != YieldAction::Nothing) {
-				//We are either replacing, removing, or stacking. This can trigger additional replaces/removes stacks.
-				//Therefore, forward to the next Slice.
-				res = addRemMoveSlices(res, currSlice);
-			}
+			default: //Else, don't handle
+				break;
 		}
 	}
 }

@@ -65,7 +65,7 @@ public:
 
 private:
 	//Portions of the game update loop
-	void processEvents(const sf::Time& elapsed);
+	void processEvents(std::vector<sf::Event::KeyEvent>& typed); //Stores typed keys in the vector.
 	void repaintGame() const;
 	YieldAction addRemMoveSlices(const YieldAction& next, Slice* currSlice);
 

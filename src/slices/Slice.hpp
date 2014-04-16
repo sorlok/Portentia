@@ -44,10 +44,10 @@ public:
 	virtual YieldAction activated(GameEngineControl& gEngine, Slice* prevSlice, sf::RenderWindow& window) = 0;
 
 	///Process a pending event.
-	virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
+	//virtual YieldAction processEvent(const sf::Event& event, const sf::Time& elapsed) = 0;
 
 	///General update (called after all events).
-	virtual void update(const sf::Time& elapsed) = 0;
+	virtual void update(const sf::Time& elapsed, const std::vector<sf::Event::KeyEvent>& typed) = 0;
 
 	///Render.
 	///NOTE: Do NOT call window.display()
